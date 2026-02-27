@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Nostalgic Album</title>
+    <title>My Family Photobook</title>
     <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;700&family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #f4f1ea;
+            --bg-color: #f7f3ee;
             --sage: #7d8471;
             --gold: #b88d5c;
             --tape: rgba(211, 197, 163, 0.4);
@@ -18,56 +18,31 @@
             background-color: var(--bg-color);
             background-image: radial-gradient(#d1ccc0 1px, transparent 1px);
             background-size: 25px 25px;
-            margin: 0;
-            padding-bottom: 100px;
-            color: #4a4a4a;
+            margin: 0; padding-bottom: 100px; color: #444;
         }
 
-        /* ส่วนหัว */
+        /* Header */
         header {
             text-align: center;
-            padding: 50px 20px;
-            background: rgba(255,255,255,0.5);
+            padding: 40px 20px;
+            background: white;
             border-bottom: 2px solid #ddd;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
 
-        h1 {
-            font-family: 'Mali', cursive;
-            font-size: 2.5rem;
-            color: var(--sage);
-            margin: 0;
-        }
+        h1 { font-family: 'Mali', cursive; font-size: 2.2rem; color: var(--sage); margin: 0; }
+        .storage-status { font-size: 0.75rem; color: #888; margin-top: 10px; }
 
-        .storage-info {
-            font-size: 0.75rem;
-            color: #888;
-            margin-top: 10px;
-        }
+        /* Controls */
+        .controls { display: flex; justify-content: center; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .btn-mini { background: none; border: 1px solid var(--sage); color: var(--sage); padding: 5px 15px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-family: 'Mali'; }
+        .btn-mini.danger { border-color: #ff9999; color: #ff9999; }
 
-        /* เมนูควบคุม */
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .btn-sub {
-            background: none;
-            border: 1px solid var(--sage);
-            color: var(--sage);
-            padding: 5px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-family: 'Mali';
-            font-size: 0.8rem;
-        }
-
-        /* อัลบั้มภาพ */
+        /* Photobook Grid */
         .album-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 50px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 45px;
             max-width: 1200px;
             margin: 40px auto;
             padding: 0 20px;
@@ -78,141 +53,51 @@
             padding: 15px 15px 50px 15px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             position: relative;
-            transition: transform 0.3s;
-            cursor: pointer;
-        }
-
-        /* สุ่มการเอียงของรูป */
-        .polaroid:nth-child(odd) { transform: rotate(-2deg); }
-        .polaroid:nth-child(even) { transform: rotate(3deg); }
-        .polaroid:nth-child(3n) { transform: rotate(-1.5deg); }
-
-        .polaroid:hover {
-            transform: rotate(0deg) scale(1.05);
-            z-index: 10;
-        }
-
-        /* เทปกาว */
-        .polaroid::before {
-            content: '';
-            position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 30px;
-            background: var(--tape);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-
-        .polaroid img {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
-            border: 1px solid #eee;
-        }
-
-        .caption {
-            font-family: 'Mali', cursive;
-            text-align: center;
-            margin-top: 20px;
-            font-size: 1.3rem;
-        }
-
-        .caption span {
-            display: block;
-            font-size: 0.9rem;
-            color: var(--gold);
-            margin-top: 5px;
-        }
-
-        /* ปุ่มจัดการการ์ด */
-        .card-tools {
-            position: absolute;
-            bottom: 10px;
-            width: calc(100% - 30px);
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.7rem;
-            opacity: 0.3;
             transition: 0.3s;
         }
+        .polaroid:nth-child(odd) { transform: rotate(-1.5deg); }
+        .polaroid:nth-child(even) { transform: rotate(2deg); }
+        .polaroid:hover { transform: rotate(0deg) scale(1.03); z-index: 10; }
 
-        .polaroid:hover .card-tools { opacity: 1; }
-
-        .btn-text { background: none; border: none; cursor: pointer; color: #888; }
-        .btn-text.del { color: #cc7a7a; }
-
-        /* ปุ่มเพิ่มรูป */
-        .btn-add {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: var(--sage);
-            color: white;
-            border: none;
-            font-size: 30px;
-            cursor: pointer;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-            z-index: 1000;
+        /* Washi Tape */
+        .polaroid::before {
+            content: ''; position: absolute; top: -15px; left: 50%;
+            transform: translateX(-50%); width: 90px; height: 30px;
+            background: var(--tape); box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
 
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.7);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(5px);
-        }
+        .polaroid img { width: 100%; height: 260px; object-fit: cover; border: 1px solid #f0f0f0; }
+        .caption { font-family: 'Mali', cursive; text-align: center; margin-top: 18px; font-size: 1.3rem; }
+        .caption small { display: block; font-size: 0.9rem; color: var(--gold); margin-top: 5px; }
 
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 350px;
-            text-align: center;
+        /* Card Actions */
+        .card-actions {
+            position: absolute; bottom: 10px; width: calc(100% - 30px);
+            display: flex; justify-content: center; gap: 20px;
+            opacity: 0; transition: 0.3s;
         }
+        .polaroid:hover .card-actions { opacity: 1; }
+        .btn-action { background: none; border: none; cursor: pointer; color: #aaa; font-size: 0.75rem; }
+        .btn-action:hover { color: var(--sage); }
 
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            box-sizing: border-box;
-        }
-
-        .btn-save {
-            width: 100%;
-            background: var(--sage);
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 10px;
-            font-family: 'Mali';
-            font-size: 1.1rem;
-            cursor: pointer;
-            margin-top: 10px;
-        }
+        /* Add Button & Modal */
+        .btn-add { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--sage); color: white; border: none; font-size: 30px; cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 1000; }
+        
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-content { background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
+        .btn-save { width: 100%; background: var(--sage); color: white; border: none; padding: 15px; border-radius: 10px; font-family: 'Mali'; font-size: 1.1rem; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>สมุดบันทึกครอบครัว</h1>
-    <div class="storage-info" id="storageMsg">กำลังคำนวณพื้นที่...</div>
+    <h1>สมุดภาพครอบครัว</h1>
+    <div class="storage-status" id="storageInfo">ตรวจสอบหน่วยความจำ...</div>
     <div class="controls">
-        <button class="btn-sub" onclick="exportData()">💾 สำรองข้อมูล</button>
-        <button class="btn-sub" onclick="document.getElementById('importFile').click()">📥 นำเข้าไฟล์</button>
-        <button class="btn-sub" style="color:red; border-color:red;" onclick="clearAll()">🗑️ ล้างทั้งหมด</button>
+        <button class="btn-mini" onclick="exportData()">💾 สำรองข้อมูล</button>
+        <button class="btn-mini" onclick="document.getElementById('importFile').click()">📥 นำเข้าข้อมูล</button>
+        <button class="btn-mini danger" onclick="clearAll()">🗑️ ล้างทั้งหมด</button>
         <input type="file" id="importFile" style="display:none" onchange="importData(event)">
     </div>
 </header>
@@ -224,23 +109,23 @@
 
 <div id="memberModal" class="modal">
     <div class="modal-content">
-        <h3 id="modalTitle" style="font-family: 'Mali'; margin-top: 0;">บันทึกคนสำคัญ</h3>
+        <h3 id="modalTitle" style="font-family: 'Mali'; margin: 0 0 15px 0;">บันทึกสมาชิก</h3>
         <input type="hidden" id="editId">
-        <label style="font-size: 0.8rem; color: #888;">เลือกรูปภาพ (ระบบจะย่อรูปให้เอง)</label>
+        <label style="font-size: 0.75rem; color: #999;">เลือกรูปภาพ (ระบบจะบีบอัดให้อัตโนมัติ)</label>
         <input type="file" id="mImg" accept="image/*">
         <input type="text" id="mName" placeholder="ชื่อ-นามสกุล">
-        <input type="text" id="mRel" placeholder="ความสัมพันธ์ (เช่น พ่อ, ย่า, พี่สาว)">
+        <input type="text" id="mRel" placeholder="ความสัมพันธ์ (เช่น คุณแม่, พี่ชาย)">
         <button class="btn-save" onclick="saveMember()">บันทึกข้อมูล</button>
-        <button onclick="closeModal()" style="background:none; border:none; margin-top:15px; color:#aaa; cursor:pointer;">ยกเลิก</button>
+        <button onclick="closeModal()" style="background:none; border:none; margin-top:10px; color:#ccc; cursor:pointer; font-size: 0.8rem;">ยกเลิก</button>
     </div>
 </div>
 
 <script>
-    // ใช้ Key ใหม่เพื่อไม่ให้ตีกับข้อมูลขนาดใหญ่เดิม
-    const DB_NAME = 'family_album_v11';
-    let albumData = JSON.parse(localStorage.getItem(DB_NAME)) || [];
+    // ใช้ Key ใหม่เพื่อให้เครื่องเริ่มเก็บข้อมูลแบบประหยัดพื้นที่ทันที
+    const KEY = 'photobook_final_v12';
+    let members = JSON.parse(localStorage.getItem(KEY)) || [];
 
-    // --- ระบบย่อรูปภาพ (หัวใจสำคัญแก้เมมเต็ม) ---
+    // --- ระบบย่อรูปภาพเพื่อประหยัดพื้นที่ (บีบอัดขั้นสุด) ---
     async function processImage(file) {
         return new Promise((resolve) => {
             const reader = new FileReader();
@@ -250,28 +135,23 @@
                 img.src = e.target.result;
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
-                    // ย่อขนาดเหลือ 350px (เพียงพอต่อการดูบนจอ)
-                    const MAX_WIDTH = 350;
+                    const MAX_WIDTH = 400; // ขนาดกำลังดีสำหรับการดูบนมือถือ/iPad
                     const scale = MAX_WIDTH / img.width;
                     canvas.width = MAX_WIDTH;
                     canvas.height = img.height * scale;
-                    
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    
-                    // บีบอัดเป็น JPEG คุณภาพ 0.6 (ชัดกำลังดี แต่ไฟล์จิ๋ว)
-                    resolve(canvas.toDataURL('image/jpeg', 0.6));
+                    resolve(canvas.toDataURL('image/jpeg', 0.6)); // บีบอัดเหลือคุณภาพ 60% (ไฟล์จะเล็กลงมาก)
                 };
             };
         });
     }
 
-    // --- การจัดการข้อมูล ---
     function openModal(id = null) {
         document.getElementById('memberModal').style.display = 'flex';
         document.getElementById('mImg').value = '';
         if (id) {
-            const m = albumData.find(x => x.id === id);
+            const m = members.find(x => x.id === id);
             document.getElementById('editId').value = m.id;
             document.getElementById('mName').value = m.name;
             document.getElementById('mRel').value = m.relation;
@@ -280,104 +160,103 @@
             document.getElementById('editId').value = '';
             document.getElementById('mName').value = '';
             document.getElementById('mRel').value = '';
-            document.getElementById('modalTitle').innerText = "บันทึกคนสำคัญ";
+            document.getElementById('modalTitle').innerText = "บันทึกสมาชิกใหม่";
         }
     }
 
     function closeModal() { document.getElementById('memberModal').style.display = 'none'; }
 
     async function saveMember() {
-        const id = document.getElementById('editId').value || Date.now().toString();
+        const id = document.getElementById('editId').value || "M" + Date.now();
         const name = document.getElementById('mName').value;
         const rel = document.getElementById('mRel').value;
         const file = document.getElementById('mImg').files[0];
 
-        if (!name) return alert("โปรดใส่ชื่อครับ");
+        if (!name) return alert("โปรดกรอกชื่อด้วยครับ");
 
         let imgData = "https://www.w3schools.com/howto/img_avatar.png";
-        const existing = albumData.find(x => x.id === id);
+        const existing = members.find(x => x.id === id);
         if (existing) imgData = existing.img;
 
         if (file) imgData = await processImage(file);
 
         const person = { id, name, relation: rel, img: imgData };
-        const idx = albumData.findIndex(x => x.id === id);
+        const idx = members.findIndex(x => x.id === id);
 
-        if (idx > -1) albumData[idx] = person;
-        else albumData.push(person);
+        if (idx > -1) members[idx] = person;
+        else members.push(person);
 
         sync();
         closeModal();
     }
 
     function deleteMember(id) {
-        if (confirm("ลบรูปภาพคนนี้ออกจากอัลบั้มใช่ไหม?")) {
-            albumData = albumData.filter(x => x.id !== id);
+        if (confirm("ลบรูปสมาชิกคนนี้ออกจากอัลบั้ม?")) {
+            members = members.filter(x => x.id !== id);
             sync();
         }
     }
 
     function sync() {
         try {
-            localStorage.setItem(DB_NAME, JSON.stringify(albumData));
+            localStorage.setItem(KEY, JSON.stringify(members));
             render();
-            updateStorage();
+            updateStorageInfo();
         } catch (e) {
-            alert("หน่วยความจำเครื่องเต็ม! โปรดกด 'ล้างทั้งหมด' หรือลบบางรูปออกครับ");
+            alert("หน่วยความจำเต็ม! แนะนำให้ลบรูปเก่าออกหรือกด 'ล้างทั้งหมด' เพื่อเริ่มใหม่แบบประหยัดพื้นที่ครับ");
         }
     }
 
-    // --- การแสดงผล ---
     function render() {
         const grid = document.getElementById('albumGrid');
-        grid.innerHTML = albumData.map(m => `
+        grid.innerHTML = members.map(m => `
             <div class="polaroid">
                 <img src="${m.img}">
                 <div class="caption">
                     ${m.name}
-                    <span>${m.relation}</span>
+                    <small>${m.relation}</small>
                 </div>
-                <div class="card-tools">
-                    <button class="btn-text" onclick="openModal('${m.id}')">แก้ไข</button>
-                    <button class="btn-text del" onclick="deleteMember('${m.id}')">ลบ</button>
+                <div class="card-actions">
+                    <button class="btn-action" onclick="openModal('${m.id}')">✏️ แก้ไข</button>
+                    <button class="btn-action" onclick="deleteMember('${m.id}')">🗑️ ลบ</button>
                 </div>
             </div>
         `).join('');
     }
 
-    function updateStorage() {
-        const used = new Blob([JSON.stringify(albumData)]).size;
+    function updateStorageInfo() {
+        const used = new Blob([JSON.stringify(members)]).size;
         const percent = ((used / (5 * 1024 * 1024)) * 100).toFixed(1);
-        document.getElementById('storageMsg').innerText = `พื้นที่ที่ใช้ไป: ${percent}% (บันทึกได้อีกเยอะครับ)`;
+        document.getElementById('storageInfo').innerText = `ใช้พื้นที่ไป: ${percent}% (บีบอัดรูปจิ๋วทำให้เก็บได้อีกเยอะครับ)`;
     }
 
     function clearAll() {
-        if (confirm("⚠️ ลบรูปภาพทั้งหมดในอัลบั้ม? (แนะนำให้สำรองข้อมูลก่อน)")) {
-            albumData = [];
+        if (confirm("⚠️ ต้องการลบข้อมูลทั้งหมดในเครื่องเพื่อเริ่มใหม่ใช่ไหม?")) {
+            members = [];
             sync();
         }
     }
 
     function exportData() {
-        const blob = new Blob([JSON.stringify(albumData)], {type: 'application/json'});
+        const blob = new Blob([JSON.stringify(members)], {type: 'application/json'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url; a.download = 'family-album-backup.json'; a.click();
+        a.href = url; a.download = 'family-photobook.json'; a.click();
     }
 
     function importData(e) {
         const reader = new FileReader();
         reader.onload = (event) => {
-            albumData = JSON.parse(event.target.result);
+            members = JSON.parse(event.target.result);
             sync();
             alert("นำเข้าข้อมูลสำเร็จ!");
         };
         reader.readAsText(e.target.files[0]);
     }
 
-    // เริ่มต้น
+    // เริ่มต้นแอป
     render();
-    updateStorage();
+    updateStorageInfo();
 </script>
 </body>
 </html>
