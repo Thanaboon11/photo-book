@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Legacy | V9 Extreme Slim</title>
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;700&family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --paper: #fdfaf6; --sage: #7d8471; --gold: #b88d5c; --line: #ccc; }
+        body { font-family: 'Sarabun', sans-serif; background-color: #efede8; margin: 0; padding-bottom: 80px; }
+        nav { background: var(--sage); padding: 10px; display: flex; justify-content: space-between; position: sticky; top: 0; z-index: 1000; color: white; flex-wrap: wrap; gap: 5px; }
+        .nav-btn { background: none; border: 1px solid #fff; color: white; padding: 4px 10px; border-radius: 15px; cursor: pointer; font-family: 'Mali'; font-size: 0.75rem; }
+        .nav-btn.danger { border-color: #ff9999; color: #ff9999; }
+        header { text-align: center; padding: 15px; background: var(--paper); border-bottom: 1px solid #ddd; }
+        h1 { font-family: 'Mali'; font-size: 1.5rem; color: var(--sage); margin: 0; }
+        .storage-text { font-size: 0.65rem; opacity: 0.8; width: 100%; text-align: center; margin-top: 5px; }
+        
+        /* Tree Styles */
+        #treeView { padding: 30px 0; overflow-x: auto; text-align: center; }
+        .tree ul { display: flex; justify-content: center; position: relative; padding-top: 20px; }
+        .tree li { list-style: none; position: relative; padding: 20px 5px 0 5px; }
+        .tree li::before, .tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid var(--line); width: 50%; height: 20px; }
+        .tree li::after { right: auto; left: 50%; border-left: 2px solid var(--line); }
+        .tree li:only-child::after, .tree li:only-child::before { display: none; }
+        .tree li:only-child { padding-top: 0; }
+        .tree li:first-child::after { border-radius: 5px 0 0 0; }
+        .tree li:last-child::before { border-right: 2px solid var(--line); border-radius: 0 5px 0 0; }
+        .tree ul ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid var(--line); width: 0; height: 20px; }
+
+        .node { background: white; border: 2px solid var(--sage); padding: 6px; border-radius: 10px; display: inline-block; min-width: 90px; cursor: grab; position: relative; }
+        .node img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 3px; background: #eee; }
+        .node b { font-family: 'Mali'; font-size: 0.7rem; display: block; white-space: nowrap; }
+        .node.drag-over { border-color: var(--gold); background: #fffcf0; transform: scale(1.1); }
+
+        .btn-add { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: var(--gold); color: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 2000; }
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 3000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 15px; width: 280px; }
+        input { width: 100%; padding: 8px; margin: 8px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .save-btn { width: 100%; background: var(--sage); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-family: 'Mali'; }
+        .drop-zone { border: 1px dashed var(--gold); padding: 8px; border-radius: 8px; margin: 10px auto; max-width: 250px; color: var(--gold); font-size: 0.75rem; text-align: center; font-family: 'Mali'; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div style="display: flex; gap: 5px;">
+        <button class="nav-btn" onclick="exportData()">💾 สำรองไฟล์</button>
+        <button class="nav-btn danger" onclick="clearAllData()">⚠️ ล้างข้อมูลทั้งหมด</button>
+    </div>
+    <div class="storage-text" id="storageInfo">Checking memory...</div>
+</nav>
+
+<header>
+    <h1>Family Tree V9</h1>
+    <div class="drop-zone" ondragover="e=>e.preventDefault()" ondrop="dropToRoot(event)">🖱️ ลากการ์ดวางที่นี่เพื่อขึ้นบนสุด</div>
+</header>
+
+<div id="treeView"><div class="tree" id="treeContent"></div></div>
+<button class="btn-add" onclick="openModal()">+</button>
+
+<div id="memberModal" class="modal">
+    <div class="modal-content">
+        <h3 style="font-family: 'Mali'; text-align: center; margin: 0 0 10px 0;">เพิ่มคนในผัง</h3>
+        <input type="file" id="mImg" accept="image/*">
+        <input type="text" id="mName" placeholder="ชื่อเล่น/ชื่อจริง">
+        <input type="text" id="mRel" placeholder="ความสัมพันธ์">
+        <button class="save-btn" onclick="saveMember()">บันทึก</button>
+        <button onclick="closeModal()" style="width:100%; background:none; border:none; margin-top:10px; color:#aaa; font-size:0.8rem;">ยกเลิก</button>
+    </div>
+</div>
+
+<script>
+    let family = JSON.parse(localStorage.getItem('family_v9_extreme')) || [];
+    let draggedId = null;
+
+    function updateStorageInfo() {
+        const used = new Blob([JSON.stringify(family)]).size;
+        const limit = 5 * 1024 * 1024; // 5MB
+        const percent = ((used / limit) * 100).toFixed(2);
+        document.getElementById('storageInfo').innerText = `ใช้ไปแล้ว: ${percent}% (หากถึง 100% จะเพิ่มไม่ได้)`;
+    }
+
+    function openModal() { document.getElementById('memberModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('memberModal').style.display = 'none'; }
+
+    // --- ระบบย่อรูปขั้นวิกฤต (Extreme Compression) ---
+    async function compressImage(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const size = 100; // จิ๋วมาก 100x100px
+                    canvas.width = size; canvas.height = size;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, size, size);
+                    resolve(canvas.toDataURL('image/jpeg', 0.2)); // คุณภาพต่ำมากเพื่อประหยัดที่
+                };
+            };
+        });
+    }
+
+    async function saveMember() {
+        const name = document.getElementById('mName').value;
+        const rel = document.getElementById('mRel').value;
+        const file = document.getElementById('mImg').files[0];
+        if (!name) return alert("โปรดใส่ชื่อ");
+
+        let imgData = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+        if (file) imgData = await compressImage(file);
+
+        family.push({ id: "P" + Date.now(), name, relation: rel, img: imgData, parentId: "" });
+        saveAndSync();
+        closeModal();
+    }
+
+    function saveAndSync() {
+        try {
+            localStorage.setItem('family_v9_extreme', JSON.stringify(family));
+            updateStorageInfo(); renderTree();
+        } catch (e) {
+            alert("หน่วยความจำเต็ม! โปรดกด 'ล้างข้อมูลทั้งหมด' แล้วเริ่มใหม่อีกครั้งครับ");
+        }
+    }
+
+    function clearAllData() {
+        if(confirm("⚠️ คำเตือน: ข้อมูลและรูปทั้งหมดจะหายไป เพื่อเริ่มเก็บแบบประหยัดพื้นที่ใหม่ ยืนยันไหมครับ?")) {
+            family = [];
+            localStorage.removeItem('family_v9_extreme');
+            saveAndSync();
+        }
+    }
+
+    // --- TREE LOGIC ---
+    function renderTree() { document.getElementById('treeContent').innerHTML = buildTreeHTML(""); }
+    function buildTreeHTML(pId = "") {
+        const children = family.filter(m => m.parentId === pId);
+        if (children.length === 0) return "";
+        let html = "<ul>";
+        children.forEach(m => {
+            html += `<li>
+                <div class="node" draggable="true" ondragstart="draggedId='${m.id}'" ondragover="e=>{e.preventDefault(); e.currentTarget.classList.add('drag-over')}" ondragleave="e=>e.currentTarget.classList.remove('drag-over')" ondrop="dropOnMember(event, '${m.id}')">
+                    <img src="${m.img}"><b>${m.name}</b>
+                    <button onclick="deleteMember('${m.id}')" style="position:absolute; top:-5px; right:-5px; background:red; color:white; border-radius:50%; border:none; width:15px; height:15px; font-size:8px; cursor:pointer;">X</button>
+                </div>
+                ${buildTreeHTML(m.id)}
+            </li>`;
+        });
+        html += "</ul>"; return html;
+    }
+
+    function dropOnMember(e, targetId) {
+        e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+        if (draggedId === targetId) return;
+        const p = family.find(m => m.id === draggedId);
+        if (p) { p.parentId = targetId; saveAndSync(); }
+    }
+    function dropToRoot(e) { 
+        const p = family.find(m => m.id === draggedId);
+        if (p) { p.parentId = ""; saveAndSync(); }
+    }
+    function deleteMember(id) { if(confirm("ลบคนนี้?")) { family = family.filter(m => m.id !== id); saveAndSync(); } }
+    function exportData() {
+        const blob = new Blob([JSON.stringify(family)], {type: 'application/json'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'family_v9_backup.json'; a.click();
+    }
+
+    updateStorageInfo(); renderTree();
+</script>
+</body>
+</html>
