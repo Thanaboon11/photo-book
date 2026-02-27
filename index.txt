@@ -3,83 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Legacy | สมุดภาพและแผนผังครอบครัว</title>
+    <title>Family Legacy | Fixed Version</title>
     <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;700&family=Playfair+Display:wght@700&family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --paper: #f9f6f0;
-            --sage: #7d8471;
-            --gold: #b88d5c;
-            --line: #ccc;
-            --tape: rgba(211, 197, 163, 0.5);
-        }
-
-        body {
-            font-family: 'Sarabun', sans-serif;
-            background-color: #efede8;
-            margin: 0; padding: 0;
-            color: #444;
-        }
-
-        /* --- Navigation --- */
-        nav {
-            background: var(--sage);
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0; z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
+        :root { --paper: #f9f6f0; --sage: #7d8471; --gold: #b88d5c; --line: #ccc; --tape: rgba(211, 197, 163, 0.5); }
+        body { font-family: 'Sarabun', sans-serif; background-color: #efede8; margin: 0; color: #444; }
+        nav { background: var(--sage); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .nav-links { display: flex; gap: 10px; }
-        
-        .nav-btn {
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
-            color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer;
-            font-family: 'Mali'; font-size: 0.9rem; transition: 0.3s;
-        }
-
-        .nav-btn.active { background: white; color: var(--sage); border-color: white; }
-        .nav-btn:hover { background: var(--gold); color: white; }
-
-        /* --- Header --- */
-        header { text-align: center; padding: 50px 20px; background: var(--paper); }
-        h1 { font-family: 'Playfair Display', serif; font-size: 3rem; color: var(--sage); margin: 0; }
-        .subtitle { font-family: 'Mali'; color: var(--gold); margin-top: 5px; }
-
+        .nav-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-family: 'Mali'; transition: 0.3s; }
+        .nav-btn.active { background: white; color: var(--sage); }
+        header { text-align: center; padding: 40px 20px; background: var(--paper); }
+        h1 { font-family: 'Playfair Display', serif; font-size: 2.5rem; color: var(--sage); margin: 0; }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-
-        /* --- Photobook View --- */
-        .photobook-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 50px; padding: 40px 0;
-        }
-
-        .photo-card {
-            background: white; padding: 15px 15px 45px 15px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            position: relative; transition: 0.4s;
-        }
-        .photo-card:nth-child(odd) { transform: rotate(-2deg); }
-        .photo-card:nth-child(even) { transform: rotate(2deg); }
-        .photo-card:hover { transform: rotate(0deg) scale(1.05); z-index: 10; }
-
-        .photo-card::before {
-            content: ''; position: absolute; top: -15px; left: 50%;
-            transform: translateX(-50%); width: 100px; height: 30px;
-            background: var(--tape); z-index: 2;
-        }
-
-        .photo-card img { width: 100%; height: 280px; object-fit: cover; border: 1px solid #eee; }
-        .caption { font-family: 'Mali'; text-align: center; margin-top: 20px; font-size: 1.3rem; }
-        .caption small { display: block; color: var(--gold); font-size: 0.9rem; }
-
-        /* --- Tree View (Drag & Drop) --- */
-        #treeView { display: none; overflow-x: auto; padding: 40px 20px; text-align: center; }
+        .photobook-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 40px; padding: 20px 0; }
+        .photo-card { background: white; padding: 15px 15px 40px 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; transition: 0.3s; transform: rotate(-1deg); }
+        .photo-card:nth-child(even) { transform: rotate(1.5deg); }
+        .photo-card::before { content: ''; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 80px; height: 25px; background: var(--tape); }
+        .photo-card img { width: 100%; height: 250px; object-fit: cover; border: 1px solid #eee; }
+        .caption { font-family: 'Mali'; text-align: center; margin-top: 15px; }
+        #treeView { display: none; overflow-x: auto; padding: 40px 0; text-align: center; }
         .tree ul { display: flex; justify-content: center; position: relative; padding-top: 20px; }
-        .tree li { list-style: none; position: relative; padding: 20px 10px 0 10px; }
+        .tree li { list-style: none; position: relative; padding: 20px 5px 0 5px; }
         .tree li::before, .tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid var(--line); width: 50%; height: 20px; }
         .tree li::after { right: auto; left: 50%; border-left: 2px solid var(--line); }
         .tree li:only-child::after, .tree li:only-child::before { display: none; }
@@ -87,40 +31,15 @@
         .tree li:first-child::after { border-radius: 5px 0 0 0; }
         .tree li:last-child::before { border-right: 2px solid var(--line); border-radius: 0 5px 0 0; }
         .tree ul ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid var(--line); width: 0; height: 20px; }
-
-        .node {
-            background: white; border: 2.5px solid var(--sage); padding: 12px;
-            border-radius: 15px; display: inline-block; min-width: 140px;
-            cursor: grab; transition: 0.3s; position: relative; z-index: 20;
-        }
-        .node.drag-over { background: #fff8e1; border-style: dashed; border-color: var(--gold); }
-        .node img { width: 65px; height: 65px; border-radius: 50%; object-fit: cover; border: 2px solid var(--paper); }
-        .node span { display: block; font-family: 'Mali'; font-weight: bold; font-size: 0.9rem; margin-top: 5px; }
-
-        /* --- Action Buttons --- */
-        .btn-add {
-            position: fixed; bottom: 30px; right: 30px;
-            width: 65px; height: 65px; border-radius: 50%;
-            background: var(--gold); color: white; border: none;
-            font-size: 35px; cursor: pointer; box-shadow: 0 10px 25px rgba(184, 141, 92, 0.4);
-            z-index: 2000; transition: 0.3s;
-        }
-        .btn-add:hover { transform: scale(1.1) rotate(90deg); }
-
-        /* --- Modal --- */
-        .modal {
-            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(45, 46, 40, 0.85); z-index: 3000; justify-content: center; align-items: center;
-            backdrop-filter: blur(5px);
-        }
-        .modal-content { background: var(--paper); padding: 35px; border-radius: 20px; width: 90%; max-width: 420px; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 10px 0 20px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Sarabun'; box-sizing: border-box; }
-        label { font-family: 'Mali'; font-weight: bold; color: var(--sage); }
-
-        .root-zone {
-            border: 2px dashed var(--gold); background: rgba(212, 163, 115, 0.05);
-            padding: 15px; border-radius: 15px; margin-bottom: 20px; font-family: 'Mali'; color: var(--gold);
-        }
+        .node { background: white; border: 2px solid var(--sage); padding: 10px; border-radius: 12px; display: inline-block; min-width: 120px; cursor: grab; z-index: 10; position: relative; }
+        .node img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
+        .node.drag-over { border-style: dashed; background: #fff8e1; }
+        .btn-add { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--gold); color: white; border: none; font-size: 30px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.2); z-index: 2000; }
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 3000; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+        .modal-content { background: var(--paper); padding: 30px; border-radius: 20px; width: 90%; max-width: 380px; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .save-btn { width: 100%; background: var(--sage); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-family: 'Mali'; font-size: 1.1rem; }
+        .root-zone { border: 2px dashed var(--gold); padding: 10px; border-radius: 10px; margin-bottom: 20px; color: var(--gold); font-family: 'Mali'; }
     </style>
 </head>
 <body>
@@ -131,23 +50,22 @@
         <button class="nav-btn" id="btnTree" onclick="switchView('tree')">🌳 แผนผังครอบครัว</button>
     </div>
     <div class="nav-links">
-        <button class="nav-btn" onclick="exportData()" style="border-color: #fff;">💾 ส่งออกไฟล์ (Backup)</button>
-        <button class="nav-btn" onclick="document.getElementById('importFile').click()">📥 นำเข้าไฟล์</button>
+        <button class="nav-btn" onclick="exportData()">💾 สำรองข้อมูล</button>
+        <button class="nav-btn" onclick="document.getElementById('importFile').click()">📥 นำเข้า</button>
         <input type="file" id="importFile" style="display:none" onchange="importData(event)">
     </div>
 </nav>
 
 <header>
-    <h1 id="mainTitle">The Family Legacy</h1>
-    <p class="subtitle">บันทึกรักจากรุ่นสู่รุ่น ข้อมูลไม่มีวันเลือนหาย</p>
+    <h1>The Family Legacy</h1>
+    <p style="font-family: 'Mali'; color: var(--gold);">บันทึกความทรงจำที่ไม่เลือนหาย</p>
 </header>
 
 <div class="container">
     <div id="albumView" class="photobook-grid"></div>
-
     <div id="treeView">
-        <div class="root-zone" ondragover="e=>e.preventDefault()" ondrop="dropToRoot(event)">
-            🖱️ ลากการ์ดมาวางตรงนี้ เพื่อขึ้นเป็นบรรพบุรุษสูงสุด
+        <div class="root-zone" ondragover="event.preventDefault()" ondrop="dropToRoot(event)">
+            🖱️ ลากมาวางตรงนี้เพื่อเป็นคนแรกของผัง
         </div>
         <div class="tree" id="treeContent"></div>
     </div>
@@ -157,49 +75,32 @@
 
 <div id="memberModal" class="modal">
     <div class="modal-content">
-        <h3 id="modalTitle" style="font-family: 'Mali'; text-align: center; color: var(--sage);">บันทึกคนสำคัญ</h3>
+        <h3 id="modalTitle" style="font-family: 'Mali'; text-align: center;">เพิ่มสมาชิก</h3>
         <input type="hidden" id="editId">
-        
-        <label>เลือกรูปภาพ</label>
+        <label style="font-size: 0.8rem;">รูปภาพ (ระบบจะย่อให้เองครับ)</label>
         <input type="file" id="mImg" accept="image/*">
-        
-        <label>ชื่อ-นามสกุล</label>
-        <input type="text" id="mName" placeholder="เช่น คุณทวดบุญส่ง">
-        
-        <label>ความสัมพันธ์</label>
-        <input type="text" id="mRel" placeholder="เช่น พ่อ, ย่า, พี่ชาย">
-        
-        <button onclick="saveMember()" style="width:100%; background: var(--sage); color:white; border:none; padding:15px; border-radius:10px; cursor:pointer; font-family: 'Mali'; font-size: 1.1rem;">บันทึกข้อมูล</button>
-        <button onclick="closeModal()" style="width:100%; background:none; border:none; margin-top:15px; color:#aaa; cursor:pointer;">ยกเลิก</button>
+        <input type="text" id="mName" placeholder="ชื่อ-นามสกุล">
+        <input type="text" id="mRel" placeholder="ความสัมพันธ์ (เช่น พ่อ, พี่สาว)">
+        <button class="save-btn" onclick="saveMember()">บันทึก</button>
+        <button onclick="closeModal()" style="width:100%; background:none; border:none; margin-top:10px; color:#aaa; cursor:pointer;">ยกเลิก</button>
     </div>
 </div>
 
 <script>
-    let familyData = JSON.parse(localStorage.getItem('familyFinalDB_2024')) || [];
+    let familyData = JSON.parse(localStorage.getItem('familyFinalDB_V2')) || [];
     let draggedId = null;
 
-    // --- Switch Views ---
     function switchView(view) {
-        const album = document.getElementById('albumView');
-        const tree = document.getElementById('treeView');
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-
-        if (view === 'album') {
-            album.style.display = 'grid';
-            tree.style.display = 'none';
-            document.getElementById('btnAlbum').classList.add('active');
-            renderAlbum();
-        } else {
-            album.style.display = 'none';
-            tree.style.display = 'block';
-            document.getElementById('btnTree').classList.add('active');
-            renderTree();
-        }
+        document.getElementById('albumView').style.display = view === 'album' ? 'grid' : 'none';
+        document.getElementById('treeView').style.display = view === 'tree' ? 'block' : 'none';
+        document.getElementById('btnAlbum').classList.toggle('active', view === 'album');
+        document.getElementById('btnTree').classList.toggle('active', view === 'tree');
+        if(view === 'album') renderAlbum(); else renderTree();
     }
 
-    // --- Modal Logic ---
     function openModal(id = null) {
         document.getElementById('memberModal').style.display = 'flex';
+        document.getElementById('mImg').value = ''; // สำคัญ: ล้างค่ารูปเก่า
         if (id) {
             const m = familyData.find(x => x.id === id);
             document.getElementById('editId').value = m.id;
@@ -216,50 +117,69 @@
 
     function closeModal() { document.getElementById('memberModal').style.display = 'none'; }
 
-    // --- Save & Storage ---
+    // ฟังก์ชันย่อรูปภาพเพื่อประหยัดพื้นที่ LocalStorage
+    async function processImage(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 600; // ย่อขนาดให้กว้างสูงสุด 600px
+                    const scaleSize = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scaleSize;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    resolve(canvas.toDataURL('image/jpeg', 0.7)); // บีบอัดคุณภาพ 70%
+                };
+            };
+        });
+    }
+
     async function saveMember() {
         const id = document.getElementById('editId').value || Date.now().toString();
         const name = document.getElementById('mName').value;
         const relation = document.getElementById('mRel').value;
         const file = document.getElementById('mImg').files[0];
 
-        if (!name) return alert("โปรดระบุชื่อครับ");
+        if (!name) return alert("กรุณาใส่ชื่อด้วยครับ");
 
         let imgData = "https://www.w3schools.com/howto/img_avatar.png";
         const existing = familyData.find(m => m.id === id);
         if (existing) imgData = existing.img;
 
         if (file) {
-            imgData = await new Promise(res => {
-                const rd = new FileReader();
-                rd.onload = () => res(rd.result);
-                rd.readAsDataURL(file);
-            });
+            imgData = await processImage(file);
         }
 
         const newMember = { id, name, relation, img: imgData, parentId: existing ? existing.parentId : "" };
         const idx = familyData.findIndex(m => m.id === id);
+        
         if (idx > -1) familyData[idx] = newMember;
         else familyData.push(newMember);
 
-        syncData();
-        closeModal();
-    }
-
-    function deleteMember(id) {
-        if(confirm("ลบข้อมูลนี้ ข้อมูลลูกหลานในแผนผังจะหายไปด้วย ยืนยันไหมครับ?")) {
-            familyData = familyData.filter(m => m.id !== id);
-            syncData();
+        try {
+            localStorage.setItem('familyFinalDB_V2', JSON.stringify(familyData));
+            renderAlbum();
+            renderTree();
+            closeModal();
+        } catch (e) {
+            alert("หน่วยความจำเต็ม! อาจเป็นเพราะรูปภาพมีขนาดใหญ่เกินไป ลองใช้รูปอื่นหรือลดจำนวนรูปครับ");
         }
     }
 
-    function syncData() {
-        localStorage.setItem('familyFinalDB_2024', JSON.stringify(familyData));
-        renderAlbum();
-        renderTree();
+    function deleteMember(id) {
+        if(confirm("ยืนยันการลบครับ?")) {
+            familyData = familyData.filter(m => m.id !== id);
+            localStorage.setItem('familyFinalDB_V2', JSON.stringify(familyData));
+            renderAlbum();
+            renderTree();
+        }
     }
 
-    // --- Render Album ---
     function renderAlbum() {
         const grid = document.getElementById('albumView');
         grid.innerHTML = '';
@@ -267,22 +187,16 @@
             grid.innerHTML += `
                 <div class="photo-card">
                     <img src="${m.img}">
-                    <div class="caption">
-                        <strong>${m.name}</strong>
-                        <small>${m.relation}</small>
-                    </div>
+                    <div class="caption"><strong>${m.name}</strong><br><small>${m.relation}</small></div>
                     <div style="text-align:center; margin-top:10px;">
-                        <button onclick="openModal('${m.id}')" style="background:none; border:none; color:var(--sage); cursor:pointer; font-size:0.8rem;">แก้ไข</button> |
-                        <button onclick="deleteMember('${m.id}')" style="background:none; border:none; color:red; cursor:pointer; font-size:0.8rem;">ลบ</button>
+                        <button onclick="openModal('${m.id}')" style="background:none; border:none; color:blue; cursor:pointer;">แก้</button> |
+                        <button onclick="deleteMember('${m.id}')" style="background:none; border:none; color:red; cursor:pointer;">ลบ</button>
                     </div>
                 </div>`;
         });
     }
 
-    // --- Render Tree & Drag/Drop ---
-    function renderTree() {
-        document.getElementById('treeContent').innerHTML = buildTreeHTML("");
-    }
+    function renderTree() { document.getElementById('treeContent').innerHTML = buildTreeHTML(""); }
 
     function buildTreeHTML(pId = "") {
         const children = familyData.filter(m => m.parentId === pId);
@@ -291,14 +205,8 @@
         children.forEach(m => {
             html += `
                 <li>
-                    <div class="node" draggable="true" 
-                         ondragstart="draggedId='${m.id}'"
-                         ondragover="e=>{e.preventDefault(); e.currentTarget.classList.add('drag-over')}"
-                         ondragleave="e=>e.currentTarget.classList.remove('drag-over')"
-                         ondrop="dropOnMember(event, '${m.id}')">
-                        <img src="${m.img}">
-                        <span>${m.name}</span>
-                        <small style="font-size:0.7rem; color:var(--gold)">${m.relation}</small>
+                    <div class="node" draggable="true" ondragstart="draggedId='${m.id}'" ondragover="event.preventDefault(); this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="dropOnMember(event, '${m.id}')">
+                        <img src="${m.img}"><div>${m.name}</div>
                     </div>
                     ${buildTreeHTML(m.id)}
                 </li>`;
@@ -313,42 +221,36 @@
         if (draggedId === targetId) return;
         const member = familyData.find(m => m.id === draggedId);
         member.parentId = targetId;
-        syncData();
+        localStorage.setItem('familyFinalDB_V2', JSON.stringify(familyData));
+        renderTree();
     }
 
     function dropToRoot(e) {
         const member = familyData.find(m => m.id === draggedId);
         member.parentId = "";
-        syncData();
+        localStorage.setItem('familyFinalDB_V2', JSON.stringify(familyData));
+        renderTree();
     }
 
-    // --- Export / Import ---
     function exportData() {
-        const dataStr = JSON.stringify(familyData);
-        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-        const exportFileDefaultName = 'family-backup.json';
-        const linkElement = document.createElement('a');
-        linkElement.setAttribute('href', dataUri);
-        linkElement.setAttribute('download', exportFileDefaultName);
-        linkElement.click();
+        const blob = new Blob([JSON.stringify(familyData)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'family-backup.json'; a.click();
     }
 
     function importData(event) {
-        const file = event.target.files[0];
-        if (!file) return;
         const reader = new FileReader();
         reader.onload = (e) => {
             familyData = JSON.parse(e.target.result);
-            syncData();
-            alert("นำเข้าข้อมูลสำเร็จแล้วครับ!");
+            localStorage.setItem('familyFinalDB_V2', JSON.stringify(familyData));
+            renderAlbum();
         };
-        reader.readAsText(file);
+        reader.readAsText(event.target.files[0]);
     }
 
-    // Init
     renderAlbum();
 </script>
-
 </body>
 </html>
 
