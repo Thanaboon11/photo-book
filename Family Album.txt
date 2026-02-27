@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Grand Family Tree</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Mali:wght@400;700&family=Sarabun:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --paper: #fdfaf6;
+            --sage: #8e9775;
+            --gold: #d4a373;
+            --dark-wood: #5d5e53;
+            --line-color: #ccc;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--paper);
+            background-image: radial-gradient(#e5e0d8 1px, transparent 1px);
+            background-size: 20px 20px;
+            margin: 0;
+            padding: 40px 20px;
+            color: var(--dark-wood);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            color: var(--sage);
+            margin: 0;
+            letter-spacing: 2px;
+        }
+
+        .btn-main {
+            background: var(--sage);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-family: 'Mali';
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(142, 151, 117, 0.3);
+            margin-top: 20px;
+        }
+
+        .btn-main:hover {
+            background: var(--gold);
+            transform: translateY(-2px);
+        }
+
+        /* --- CSS Tree Logic --- */
+        .tree-container {
+            display: flex;
+            justify-content: center;
+            overflow-x: auto;
+            padding: 20px;
+        }
+
+        .tree ul {
+            padding-top: 20px; 
+            position: relative;
+            transition: all 0.5s;
+            display: flex;
+            justify-content: center;
+        }
+
+        .tree li {
+            float: left; text-align: center;
+            list-style-type: none;
+            position: relative;
+            padding: 20px 5px 0 5px;
+            transition: all 0.5s;
+        }
+
+        /* เส้นเชื่อมแนวตั้ง */
+        .tree li::before, .tree li::after {
+            content: '';
+            position: absolute; top: 0; right: 50%;
+            border-top: 2px solid var(--line-color);
+            width: 50%; height: 20px;
+        }
+        .tree li::after {
+            right: auto; left: 50%;
+            border-left: 2px solid var(--line-color);
+        }
+
+        /* ลบเส้นส่วนเกินของตัวแรกและตัวสุดท้าย */
+        .tree li:only-child::after, .tree li:only-child::before { display: none; }
+        .tree li:only-child { padding-top: 0; }
+        .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
+        .tree li:last-child::before { border-right: 2px solid var(--line-color); border-radius: 0 5px 0 0; }
+        .tree li:first-child::after { border-radius: 5px 0 0 0; }
+
+        /* เส้นเชื่อมลงมาจากพ่อแม่ */
+        .tree ul ul::before {
+            content: '';
+            position: absolute; top: 0; left: 50%;
+            border-left: 2px solid var(--line-color);
+            width: 0; height: 20px;
+        }
+
+        /* Card ดีไซน์ */
+        .member-node {
+            display: inline-block;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid var(--sage);
+            min-width: 180px;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: 0.3s;
+            z-index: 10;
+        }
+
+        .member-node:hover {
+            border-color: var(--gold);
+            transform: scale(1.05);
+        }
+
+        .photo-box {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            overflow: hidden;
+            border: 3px solid var(--paper);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+
+        .name { font-family: 'Mali'; font-weight: bold; margin: 5px 0; color: var(--sage); }
+        .rel { font-size: 0.8rem; color: var(--gold); text-transform: uppercase; font-weight: bold; }
+
+        .controls {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            opacity: 0;
+            transition: 0.3s;
+        }
+
+        .member-node:hover .controls { opacity: 1; }
+
+        .btn-mini {
+            border: none;
+            background: #f0f0f0;
+            padding: 4px 8px;
+            font-size: 0.7rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* Form Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top:0; left:0; width:100%; height:100%;
+            background: rgba(45, 46, 40, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--paper);
+            padding: 35px;
+            border-radius: 25px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 18px;
+            border: 1.5px solid #ddd;
+            border-radius: 10px;
+            background: white;
+            box-sizing: border-box;
+        }
+
+        label { font-weight: bold; font-family: 'Mali'; color: var(--sage); }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Our Heritage</h1>
+    <p>สายใยครอบครัวแห่งความรักและผูกพัน</p>
+    <button class="btn-main" onclick="openModal()">+ เพิ่มคนในครอบครัว</button>
+</header>
+
+<div class="tree-container">
+    <div class="tree" id="familyTree">
+        </div>
+</div>
+
+<div id="memberModal" class="modal">
+    <div class="modal-content">
+        <h2 id="modalTitle" style="font-family: 'Playfair Display'; text-align: center;">Member Info</h2>
+        <input type="hidden" id="editId">
+        
+        <label>รูปภาพสมาชิก</label>
+        <input type="file" id="mImg" accept="image/*">
+        
+        <label>ชื่อ-นามสกุล</label>
+        <input type="text" id="mName" placeholder="เช่น คุณทวดบุญมี">
+        
+        <label>ความสัมพันธ์</label>
+        <input type="text" id="mRel" placeholder="เช่น พ่อ, ย่า, พี่สาว">
+        
+        <label>บุตรของใคร? (เพื่อโยงเส้น)</label>
+        <select id="mParent">
+            <option value="">-- เป็นระดับสูงสุด (ไม่มีพ่อแม่ในผัง) --</option>
+        </select>
+        
+        <button class="btn-main" style="width:100%" onclick="saveMember()">บันทึกข้อมูล</button>
+        <button onclick="closeModal()" style="width:100%; background:none; border:none; margin-top:15px; color:#aaa; cursor:pointer;">ยกเลิก</button>
+    </div>
+</div>
+
+<script>
+    let members = JSON.parse(localStorage.getItem('familyTreeData')) || [];
+
+    function openModal(id = null) {
+        const modal = document.getElementById('memberModal');
+        const parentSelect = document.getElementById('mParent');
+        document.getElementById('editId').value = id ? id : '';
+        
+        // อัปเดตรายชื่อพ่อแม่ใน Dropdown
+        parentSelect.innerHTML = '<option value="">-- เป็นระดับสูงสุด (ไม่มีพ่อแม่ในผัง) --</option>';
+        members.forEach(m => {
+            if (m.id !== id) {
+                parentSelect.innerHTML += `<option value="${m.id}">${m.name}</option>`;
+            }
+        });
+
+        if (id) {
+            const m = members.find(item => item.id === id);
+            document.getElementById('mName').value = m.name;
+            document.getElementById('mRel').value = m.relation;
+            document.getElementById('mParent').value = m.parentId || '';
+        } else {
+            document.getElementById('mName').value = '';
+            document.getElementById('mRel').value = '';
+            document.getElementById('mParent').value = '';
+        }
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('memberModal').style.display = 'none';
+    }
+
+    async function saveMember() {
+        const id = document.getElementById('editId').value || Date.now().toString();
+        const name = document.getElementById('mName').value;
+        const relation = document.getElementById('mRel').value;
+        const parentId = document.getElementById('mParent').value;
+        const fileInput = document.getElementById('mImg');
+
+        if (!name) return alert("โปรดใส่ชื่อด้วยครับ");
+
+        let imgBase64 = "https://via.placeholder.com/100";
+        const existing = members.find(m => m.id === id);
+        if (existing) imgBase64 = existing.img;
+
+        if (fileInput.files && fileInput.files[0]) {
+            imgBase64 = await convertBase64(fileInput.files[0]);
+        }
+
+        const memberData = { id, name, relation, parentId, img: imgBase64 };
+
+        const index = members.findIndex(m => m.id === id);
+        if (index > -1) members[index] = memberData;
+        else members.push(memberData);
+
+        localStorage.setItem('familyTreeData', JSON.stringify(members));
+        renderTree();
+        closeModal();
+    }
+
+    function convertBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    function deleteMember(id) {
+        if (confirm("ลบสมาชิกคนนี้ แผนผังลูกหลานอาจจะหายไปด้วย ยืนยันไหมครับ?")) {
+            members = members.filter(m => m.id !== id);
+            localStorage.setItem('familyTreeData', JSON.stringify(members));
+            renderTree();
+        }
+    }
+
+    // ฟังก์ชันสร้างโครงสร้าง Tree แบบ Recursive
+    function buildTreeHTML(parentId = "") {
+        const children = members.filter(m => m.parentId === parentId);
+        if (children.length === 0) return "";
+
+        let html = "<ul>";
+        children.forEach(m => {
+            html += `
+                <li>
+                    <div class="member-node">
+                        <div class="photo-box"><img src="${m.img}"></div>
+                        <div class="name">${m.name}</div>
+                        <div class="rel">${m.relation}</div>
+                        <div class="controls">
+                            <button class="btn-mini" onclick="openModal('${m.id}')">แก้ไข</button>
+                            <button class="btn-mini" style="color:red" onclick="deleteMember('${m.id}')">ลบ</button>
+                        </div>
+                    </div>
+                    ${buildTreeHTML(m.id)}
+                </li>
+            `;
+        });
+        html += "</ul>";
+        return html;
+    }
+
+    function renderTree() {
+        const container = document.getElementById('familyTree');
+        container.innerHTML = buildTreeHTML("");
+    }
+
+    renderTree();
+</script>
+
+</body>
+</html>
