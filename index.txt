@@ -52,27 +52,26 @@
             position: relative;
         }
 
+        /* ปรับขนาด Polaroid ให้เล็กกะทัดรัด (ประมาณ 1.6 นิ้ว) */
         .polaroid {
             background: white;
-            padding: 4px 4px 12px 4px;
+            padding: 3px 3px 12px 3px;
             box-shadow: 1px 3px 8px rgba(0,0,0,0.15);
             border: 1px solid #f0f0f0;
             width: 100%;
-        }
-        
-        @media (min-width: 768px) {
-            .polaroid { padding: 6px 6px 20px 6px; }
+            max-width: 160px; /* ขนาดประมาณ 1.6 นิ้ว */
+            margin: 0 auto;
         }
 
         .photo-corner {
-            width: 12px; height: 12px;
-            border: 1.5px solid #4a3728;
+            width: 8px; height: 8px;
+            border: 1px solid #4a3728;
             position: absolute;
             opacity: 0.3;
             pointer-events: none;
         }
-        .corner-tl { top: 4px; left: 4px; border-right: 0; border-bottom: 0; }
-        .corner-br { bottom: 4px; right: 4px; border-left: 0; border-top: 0; }
+        .corner-tl { top: 3px; left: 3px; border-right: 0; border-bottom: 0; }
+        .corner-br { bottom: 3px; right: 3px; border-left: 0; border-top: 0; }
 
         .btn-vintage {
             background: #2c1e1a;
@@ -91,7 +90,7 @@
         .image-container {
             position: relative;
             background: #f3f4f6;
-            aspect-ratio: 3/2; /* ล็อกอัตราส่วนภาพ 3:2 */
+            aspect-ratio: 3/2;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -106,11 +105,12 @@
         .toast-enter { animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translate(-50%, 100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
 
-        /* Grid Journal: บังคับเรียงซ้ายไปขวา แถวละ 2 รูป อย่างเคร่งครัด */
+        /* Grid Journal: บังคับเรียง 2 รูปต่อแถว และมีขนาดคงที่ */
         .grid-journal {
             display: grid;
             gap: 1.5rem;
-            grid-template-cols: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(2, 160px);
+            justify-content: center;
         }
 
         .loader-ring {
@@ -141,14 +141,14 @@
     <script type="text/babel" data-type="module">
         const { useState, useEffect, useRef } = React;
 
-        // คีย์สำหรับการจัดเก็บข้อมูลถาวร เพื่อแก้ปัญหาข้อมูลหาย
-        const STORAGE_KEY = 'memoir_permanent_v20';
+        // คีย์สำหรับการจัดเก็บข้อมูลถาวร
+        const STORAGE_KEY = 'memoir_stable_v21_small';
 
         const firebaseConfig = (() => {
             try { return typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null; } 
             catch { return null; }
         })();
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'memoir-stable-v20';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'memoir-stable-v21';
 
         const Icon = ({ name, size = 16, className = "" }) => {
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
@@ -171,18 +171,17 @@
             const fileInputRef = useRef(null);
             const importInputRef = useRef(null);
 
-            // ฟังก์ชันบันทึกข้อมูลลง Storage ทันที
+            // บันทึกข้อมูลและอัปเดตสถานะ
             const updateAndPersist = (newBooksList) => {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(newBooksList));
                 setBooks([...newBooksList]);
             };
 
-            // โหลดข้อมูลเมื่อเปิดหน้าจอ ครั้งแรก
+            // โหลดข้อมูลเมื่อเปิดหน้าจอ
             useEffect(() => {
                 const urlParams = new URLSearchParams(window.location.search);
                 const sharedBookId = urlParams.get('book');
                 
-                // ดึงข้อมูลจาก Local Storage ก่อนเสมอเพื่อให้เร็ว
                 const saved = localStorage.getItem(STORAGE_KEY);
                 let localBooks = saved ? JSON.parse(saved) : [];
                 setBooks(localBooks);
@@ -229,7 +228,6 @@
                             });
                         } catch (e) { setLoading(false); }
                     } else {
-                        // โหมด Local
                         if (sharedBookId) {
                             const shared = localBooks.find(b => b.id === sharedBookId);
                             if (shared) { setActiveBook(shared); setIsViewOnly(true); setIsBookOpened(false); }
@@ -252,12 +250,12 @@
                         img.src = e.target.result;
                         img.onload = () => {
                             const canvas = document.createElement('canvas');
-                            const MAX_WIDTH = 1000; 
+                            const MAX_WIDTH = 800; 
                             let w = img.width, h = img.height;
                             if (w > MAX_WIDTH) { h *= MAX_WIDTH / w; w = MAX_WIDTH; }
                             canvas.width = w; canvas.height = h;
                             canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                            res(canvas.toDataURL('image/jpeg', 0.7));
+                            res(canvas.toDataURL('image/jpeg', 0.65));
                         };
                     };
                 });
@@ -288,7 +286,7 @@
                 setModal(null);
                 setFormData({ title: "", cover: null, pageImage: null, pageText: "" });
                 setIsSaving(false);
-                showToast("สร้างหน้าปกเรียบร้อย!");
+                showToast("เริ่มบันทึกใหม่เรียบร้อย!");
             };
 
             const handleUpdatePage = async (e) => {
@@ -318,7 +316,6 @@
                 const updatedBook = { ...activeBook, pages: updatedPages };
                 const nextBooks = books.map(b => b.id === activeBook.id ? updatedBook : b);
                 
-                // บันทึกถาวรลงเครื่องทันทีเพื่อกันหายเมื่อรีเฟรช
                 updateAndPersist(nextBooks);
                 setActiveBook(updatedBook);
 
@@ -327,16 +324,14 @@
                         const { getFirestore, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
                         const db = getFirestore();
                         await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'books', activeBook.id), { pages: updatedPages });
-                    } catch (err) {
-                        console.error("Firebase update error", err);
-                    }
+                    } catch (err) {}
                 }
 
                 setModal(null); 
                 setEditTarget(null); 
                 setFormData({ title: "", cover: null, pageImage: null, pageText: "" });
                 setIsSaving(false);
-                showToast("บันทึกความทรงจำแล้ว!");
+                showToast("เก็บไว้ในสมุดแล้ว!");
             };
 
             const handleShare = () => {
@@ -350,7 +345,7 @@
                 a.setAttribute("href", dataStr);
                 a.setAttribute("download", `${activeBook.title}.json`);
                 a.click();
-                showToast("ส่งออกไฟล์สำเร็จ!");
+                showToast("ส่งออกสมุดสำเร็จ!");
             };
 
             const saveSharedToShelf = () => {
@@ -428,7 +423,7 @@
                     {modal === 'create' && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
                             <form onSubmit={handleCreate} className="vintage-paper max-w-sm w-full p-8 space-y-8 animate-in zoom-in-95 shadow-2xl">
-                                <h3 className="text-2xl font-serif font-black italic border-b border-stone-200 pb-2 text-stone-800 flex justify-between">สร้างปกใหม่ <button type="button" onClick={() => setModal(null)}><Icon name="x" size={24}/></button></h3>
+                                <h3 className="text-2xl font-serif font-black italic border-b border-stone-200 pb-2 text-stone-800 flex justify-between">เริ่มบันทึกใหม่ <button type="button" onClick={() => setModal(null)}><Icon name="x" size={24}/></button></h3>
                                 <div className="space-y-6">
                                     <div onClick={() => fileInputRef.current.click()} className="aspect-[3/2] bg-stone-100 border-2 border-stone-200 flex flex-col items-center justify-center cursor-pointer overflow-hidden rounded-sm group relative">
                                         {formData.cover ? <img src={formData.cover} className="w-full h-full object-cover" /> : <div className="text-center"><Icon name="image" size={32} className="text-stone-300 mx-auto mb-2" /><p className="font-mali text-stone-400 text-sm">เลือกรูปหน้าปก</p></div>}
@@ -440,10 +435,10 @@
                                             }
                                         }} />
                                     </div>
-                                    <input className="w-full bg-transparent border-b-2 border-stone-300 py-2 font-mali text-xl outline-none focus:border-stone-800 transition-colors text-stone-900 placeholder:text-stone-300" placeholder="ตั้งชื่อความทรงจำ..." value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required />
+                                    <input className="w-full bg-transparent border-b-2 border-stone-300 py-2 font-mali text-xl outline-none focus:border-stone-800 transition-colors text-stone-900 placeholder:text-stone-300" placeholder="ตั้งชื่อสมุด..." value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required />
                                 </div>
                                 <button type="submit" disabled={isSaving} className="w-full btn-vintage text-xl py-3 font-mali disabled:opacity-50">
-                                    {isSaving ? "กำลังบันทึก..." : "สร้างสมุดบันทึก"}
+                                    {isSaving ? "กำลังบันทึก..." : "สร้างหน้าปก"}
                                 </button>
                             </form>
                         </div>
@@ -462,20 +457,20 @@
                             </div>
                             <div className="mt-8 text-center px-2 pb-6">
                                 <h2 className="text-3xl font-serif font-black text-stone-900 mb-2 leading-tight">{activeBook.title}</h2>
-                                <p className="font-mali text-stone-400 text-xs">สร้างเมื่อ {new Date(activeBook.createdAt).toLocaleDateString()}</p>
+                                <p className="font-mali text-stone-400 text-xs">บันทึกเมื่อ {new Date(activeBook.createdAt).toLocaleDateString()}</p>
                             </div>
                         </div>
                         <div className="flex flex-col gap-4 items-center">
                             <button onClick={() => setIsBookOpened(true)} className="btn-vintage w-full py-5 text-2xl shadow-2xl active:scale-95 transition-transform font-mali">
-                                <Icon name="book-open" size={24} /> เปิดดูความทรงจำ
+                                <Icon name="book-open" size={24} /> เปิดสมุดบันทึก
                             </button>
-                            <button onClick={() => { setActiveBook(null); window.history.pushState({}, '', window.location.pathname); }} className="text-white/50 hover:text-white transition-colors text-sm font-mali italic underline">กลับไปที่ชั้นวาง</button>
+                            <button onClick={() => { setActiveBook(null); window.history.pushState({}, '', window.location.pathname); }} className="text-white/50 hover:text-white transition-colors text-sm font-mali italic underline">กลับสู่ชั้นวาง</button>
                         </div>
                     </div>
                 </div>
             );
 
-            // --- VIEW: JOURNAL (Strict 2-Column Grid) ---
+            // --- VIEW: JOURNAL (STRICT 2 COLUMNS SMALL) ---
             return (
                 <div className="relative z-10 min-h-screen flex flex-col page-transition">
                     <nav className="p-3 md:p-4 flex justify-between items-center sticky top-0 w-full z-50 bg-[#1a110f]/90 backdrop-blur-lg border-b border-white/10">
@@ -486,17 +481,17 @@
                             <button onClick={handleShare} className="p-2.5 bg-white/15 text-white rounded-full hover:bg-white/30 transition-all shadow-lg" title="แชร์"><Icon name="share-2" size={18} /></button>
                             <button onClick={handleExport} className="p-2.5 bg-white/15 text-white rounded-full hover:bg-white/30 transition-all shadow-lg" title="ดาวน์โหลด"><Icon name="download" size={18} /></button>
                             {isViewOnly ? (
-                                <button onClick={saveSharedToShelf} className="bg-amber-200 text-amber-950 px-4 py-1.5 rounded-full font-mali font-bold text-xs shadow-2xl hover:bg-white transition-all">บันทึกเล่มนี้</button>
+                                <button onClick={saveSharedToShelf} className="bg-amber-200 text-amber-950 px-4 py-1.5 rounded-full font-mali font-bold text-xs shadow-2xl hover:bg-white transition-all">เก็บสำเนาไว้</button>
                             ) : (
                                 <button onClick={() => { 
                                     setFormData({ title: "", cover: null, pageImage: null, pageText: "" });
                                     setModal('add-page'); 
-                                }} className="bg-amber-200 text-amber-950 px-5 py-2 rounded-full font-mali font-bold text-xs shadow-2xl hover:bg-white transition-all">เพิ่มความทรงจำ</button>
+                                }} className="bg-amber-200 text-amber-950 px-5 py-2 rounded-full font-mali font-bold text-xs shadow-2xl hover:bg-white transition-all">เพิ่มรูป</button>
                             )}
                         </div>
                     </nav>
 
-                    <main className="max-w-[1000px] mx-auto w-full pt-8 pb-40 px-4 md:px-8">
+                    <main className="max-w-[800px] mx-auto w-full pt-8 pb-40 px-4 md:px-8">
                         <header className="text-center mb-12">
                             <h2 className="text-4xl sm:text-7xl font-signature text-amber-100/60 drop-shadow-xl">{activeBook.title}</h2>
                         </header>
@@ -504,7 +499,7 @@
                         <div className="grid-journal">
                             {(activeBook.pages || []).map((page) => (
                                 <div key={page.id} className="relative group" style={{ transform: `rotate(${page.rotation}deg)` }}>
-                                    <div className="vintage-paper p-2 sm:p-4 h-full flex flex-col transition-transform hover:scale-105 hover:z-30 shadow-lg">
+                                    <div className="vintage-paper p-2 h-full flex flex-col transition-transform hover:scale-110 hover:z-30 shadow-lg">
                                         <div className="photo-corner corner-tl" />
                                         <div className="photo-corner corner-br" />
                                         <div className="polaroid mb-2">
@@ -513,17 +508,17 @@
                                             </div>
                                         </div>
                                         {page.text && (
-                                            <div className="px-1 text-center flex-1 flex flex-col justify-center py-2">
-                                                <p className="font-handwriting text-xl sm:text-2xl text-stone-800 leading-snug italic line-clamp-4">{page.text}</p>
+                                            <div className="px-1 text-center flex-1 flex flex-col justify-center py-1">
+                                                <p className="font-handwriting text-xs sm:text-sm text-stone-800 leading-snug italic line-clamp-3">{page.text}</p>
                                             </div>
                                         )}
                                         {!isViewOnly && (
-                                            <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all z-20">
+                                            <div className="absolute top-1 right-1 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all z-20">
                                                 <button onClick={() => { 
                                                     setEditTarget(page); 
                                                     setFormData({ ...formData, pageImage: page.image, pageText: page.text }); 
                                                     setModal('edit-page'); 
-                                                }} className="p-1.5 bg-white shadow-md text-stone-600 rounded-full hover:text-amber-600 transition-all"><Icon name="edit-3" size={12} /></button>
+                                                }} className="p-1 bg-white shadow-md text-stone-600 rounded-full hover:text-amber-600 transition-all"><Icon name="edit-3" size={10} /></button>
                                                 <button onClick={() => { 
                                                     if(confirm("ลบรูปนี้ทิ้งใช่หรือไม่?")) {
                                                         const updatedPages = activeBook.pages.filter(p => p.id !== page.id);
@@ -533,7 +528,7 @@
                                                         setActiveBook(updatedBook);
                                                         showToast("ลบรูปแล้ว");
                                                     }
-                                                }} className="p-1.5 bg-white shadow-md text-stone-600 rounded-full hover:text-red-500 transition-all"><Icon name="trash-2" size={12} /></button>
+                                                }} className="p-1 bg-white shadow-md text-stone-600 rounded-full hover:text-red-500 transition-all"><Icon name="trash-2" size={10} /></button>
                                             </div>
                                         )}
                                     </div>
@@ -542,10 +537,10 @@
                         </div>
 
                         {(!activeBook.pages || activeBook.pages.length === 0) && (
-                            <div className="max-w-md mx-auto text-center py-24 vintage-paper border-4 border-dashed border-stone-300 bg-white/40 flex flex-col items-center px-4">
-                                <Icon name="camera" size={48} className="text-stone-300 mb-4 opacity-50" />
-                                <h3 className="text-2xl font-mali font-bold italic text-stone-400 mb-6 text-center">สมุดยังว่างเปล่า... มาแปะรูปแรกกัน!</h3>
-                                {!isViewOnly && <button onClick={() => setModal('add-page')} className="btn-vintage px-10 py-3 text-lg font-mali shadow-xl">เพิ่มรูปแรก</button>}
+                            <div className="max-w-xs mx-auto text-center py-20 vintage-paper border-4 border-dashed border-stone-300 bg-white/40 flex flex-col items-center px-4">
+                                <Icon name="camera" size={32} className="text-stone-300 mb-4 opacity-50" />
+                                <h3 className="text-lg font-mali font-bold italic text-stone-400 mb-6 text-center">สมุดยังว่างเปล่า... มาแปะรูปแรกกัน!</h3>
+                                {!isViewOnly && <button onClick={() => setModal('add-page')} className="btn-vintage px-8 py-2 text-sm font-mali shadow-xl">เพิ่มรูป</button>}
                             </div>
                         )}
                     </main>
@@ -560,7 +555,7 @@
                                 </div>
                                 <div className="space-y-4">
                                     <div onClick={() => fileInputRef.current.click()} className="aspect-[3/2] bg-stone-100 border-2 border-stone-200 flex flex-col items-center justify-center cursor-pointer overflow-hidden rounded-sm relative shadow-inner group">
-                                        {(formData.pageImage) ? <img src={formData.pageImage} className="w-full h-full object-cover" /> : <div className="text-center p-4"><Icon name="upload-cloud" size={36} className="text-stone-300 mx-auto mb-2" /><p className="font-mali text-stone-400 text-sm text-center">เลือกรูปถ่าย (3:2)</p></div>}
+                                        {(formData.pageImage) ? <img src={formData.pageImage} className="w-full h-full object-cover" /> : <div className="text-center p-4"><Icon name="upload-cloud" size={36} className="text-stone-300 mx-auto mb-2" /><p className="font-mali text-stone-400 text-sm text-center">เลือกรูปถ่าย (อัตราส่วน 3:2)</p></div>}
                                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={async e => {
                                             const file = e.target.files[0];
                                             if (file) {
