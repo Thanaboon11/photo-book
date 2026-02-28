@@ -43,26 +43,16 @@
     <script type="text/babel" data-type="module">
         const { useState, useEffect, useRef } = React;
         
-        // Firebase modules
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, doc, addDoc, onSnapshot, updateDoc, deleteDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-
-        // Safe check for environment variables
+        // Firebase modules (Dynamic Import to prevent error if offline)
+        let firebaseApp, firestore, authModule;
+        
         const getFirebaseConfig = () => {
-            try { 
-                return (typeof __firebase_config !== 'undefined') ? JSON.parse(__firebase_config) : null; 
-            } catch (e) { 
-                console.error("Firebase config parse error", e);
-                return null; 
-            }
+            try { return (typeof __firebase_config !== 'undefined') ? JSON.parse(__firebase_config) : null; } 
+            catch (e) { return null; }
         };
 
         const config = getFirebaseConfig();
-        const app = config ? initializeApp(config) : null;
-        const auth = app ? getAuth(app) : null;
-        const db = app ? getFirestore(app) : null;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'photobook-memoir-v2';
+        const isLocalMode = !config;
 
         const Icon = ({ name, size = 24, className = "" }) => {
             useEffect(() => {
@@ -74,124 +64,143 @@
         };
 
         const App = () => {
-            const [user, setUser] = useState(null);
+            const [user, setUser] = useState(isLocalMode ? { uid: 'local-user' } : null);
             const [books, setBooks] = useState([]);
             const [activeBook, setActiveBook] = useState(null);
             const [loading, setLoading] = useState(true);
-            const [error, setError] = useState(null);
             const [showEditor, setShowEditor] = useState(false);
             const [showCreateModal, setShowCreateModal] = useState(false);
             const [isShareView, setIsShareView] = useState(false);
             const [viewOnlyId, setViewOnlyId] = useState(null);
             const [newBookTitle, setNewBookTitle] = useState("");
 
-            useEffect(() => {
-                if (!auth) {
-                    setError("ระบบเชื่อมต่อฐานข้อมูลขัดข้อง (Firebase config missing)");
-                    setLoading(false);
-                    return;
+            // --- DATA ENGINE ---
+            const saveBooks = async (updatedBooks) => {
+                setBooks(updatedBooks);
+                if (isLocalMode) {
+                    localStorage.setItem('memoir_books', JSON.stringify(updatedBooks));
+                } else {
+                    // Firebase logic handled via onSnapshot/Update
                 }
+            };
 
-                const initAuth = async () => {
-                    try {
+            // Initialize Firebase or Local Storage
+            useEffect(() => {
+                if (isLocalMode) {
+                    const saved = localStorage.getItem('memoir_books');
+                    if (saved) setBooks(JSON.parse(saved));
+                    setLoading(false);
+                } else {
+                    // Firebase Auth & Firestore Setup
+                    const loadFirebase = async () => {
+                        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js");
+                        const { getFirestore, collection, doc, addDoc, onSnapshot, updateDoc, deleteDoc, setDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                        const { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js");
+
+                        const app = initializeApp(config);
+                        const auth = getAuth(app);
+                        const db = getFirestore(app);
+                        const appId = typeof __app_id !== 'undefined' ? __app_id : 'photobook-memoir-v2';
+
+                        // Auth
                         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                             await signInWithCustomToken(auth, __initial_auth_token);
                         } else {
                             await signInAnonymously(auth);
                         }
-                    } catch (err) { 
-                        console.error("Auth failed:", err);
-                        setError("ไม่สามารถยืนยันตัวตนได้ กรุณารีเฟรชหน้าจอ");
-                    }
-                };
 
-                initAuth();
-                const unsubscribe = onAuthStateChanged(auth, (u) => {
-                    setUser(u);
-                    if (!u) {
-                        // If auth fails to resolve quickly, allow UI to show something
-                        setTimeout(() => setLoading(false), 3000);
-                    }
-                });
-                return () => unsubscribe();
-            }, []);
-
-            useEffect(() => {
-                const params = new URLSearchParams(window.location.search);
-                const sharedId = params.get('book');
-                if (sharedId) {
-                    setViewOnlyId(sharedId);
-                    setIsShareView(true);
+                        onAuthStateChanged(auth, (u) => {
+                            setUser(u);
+                            if (u) {
+                                const booksRef = collection(db, 'artifacts', appId, 'public', 'data', 'books');
+                                onSnapshot(booksRef, (snapshot) => {
+                                    const booksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                                    const params = new URLSearchParams(window.location.search);
+                                    const sharedId = params.get('book');
+                                    
+                                    const filtered = booksData.filter(b => b.ownerId === u.uid || b.id === sharedId);
+                                    setBooks(filtered);
+                                    
+                                    if (sharedId) {
+                                        const shared = filtered.find(b => b.id === sharedId);
+                                        if (shared) {
+                                            setActiveBook(shared);
+                                            setIsShareView(true);
+                                        }
+                                    }
+                                    setLoading(false);
+                                });
+                            }
+                        });
+                    };
+                    loadFirebase();
                 }
             }, []);
 
-            useEffect(() => {
-                if (!user || !db) return;
-                
-                const booksRef = collection(db, 'artifacts', appId, 'public', 'data', 'books');
-                const unsubscribe = onSnapshot(booksRef, (snapshot) => {
-                    const booksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    const filtered = booksData.filter(b => b.ownerId === user.uid || b.id === viewOnlyId);
-                    setBooks(filtered);
-                    
-                    if (viewOnlyId) {
-                        const shared = filtered.find(b => b.id === viewOnlyId);
-                        if (shared) setActiveBook(shared);
-                    }
-                    setLoading(false);
-                }, (error) => { 
-                    console.error("Firestore Error:", error);
-                    setError("ไม่สามารถโหลดข้อมูลได้ในขณะนี้");
-                    setLoading(false); 
-                });
-                
-                return () => unsubscribe();
-            }, [user, viewOnlyId]);
-
             const createNewBook = async (e) => {
                 e.preventDefault();
-                if (!user || !newBookTitle.trim()) return;
-                try {
-                    const newBook = {
-                        title: newBookTitle, 
-                        createdAt: Date.now(), 
-                        ownerId: user.uid,
-                        coverImage: "https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=1000",
-                        pages: [], 
-                        likes: 0
-                    };
-                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'books'), newBook);
-                    setNewBookTitle("");
-                    setShowCreateModal(false);
-                } catch (err) { console.error(err); }
+                if (!newBookTitle.trim()) return;
+                
+                const newBookData = {
+                    id: Date.now().toString(),
+                    title: newBookTitle, 
+                    createdAt: Date.now(), 
+                    ownerId: user?.uid || 'local-user',
+                    coverImage: "https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=1000",
+                    pages: [], 
+                    likes: 0
+                };
+
+                if (isLocalMode) {
+                    saveBooks([...books, newBookData]);
+                } else {
+                    const { getFirestore, collection, addDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                    const db = getFirestore();
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'photobook-memoir-v2';
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'books'), newBookData);
+                }
+                
+                setNewBookTitle("");
+                setShowCreateModal(false);
             };
 
             const deleteBook = async (e, bookId) => {
                 e.stopPropagation();
                 if (!confirm("ลบสมุดเล่มนี้ถาวรใช่ไหม?")) return;
-                try {
+                
+                if (isLocalMode) {
+                    const filtered = books.filter(b => b.id !== bookId);
+                    saveBooks(filtered);
+                    if (activeBook?.id === bookId) setActiveBook(null);
+                } else {
+                    const { getFirestore, doc, deleteDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                    const db = getFirestore();
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'photobook-memoir-v2';
                     await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'books', bookId));
                     if (activeBook?.id === bookId) setActiveBook(null);
-                } catch (err) { console.error(err); }
+                }
             };
 
             const updateBook = async (updatedBook) => {
                 if (isShareView) return;
-                try {
-                    const bookRef = doc(db, 'artifacts', appId, 'public', 'data', 'books', updatedBook.id);
-                    await setDoc(bookRef, updatedBook);
-                } catch (err) { console.error(err); }
-            };
-
-            const handleLike = async (e) => {
-                e.stopPropagation();
-                try {
-                    const bookRef = doc(db, 'artifacts', appId, 'public', 'data', 'books', activeBook.id);
-                    await updateDoc(bookRef, { likes: increment(1) });
-                } catch (err) { console.error(err); }
+                
+                if (isLocalMode) {
+                    const updatedBooks = books.map(b => b.id === updatedBook.id ? updatedBook : b);
+                    saveBooks(updatedBooks);
+                    setActiveBook(updatedBook);
+                } else {
+                    const { getFirestore, doc, setDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
+                    const db = getFirestore();
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'photobook-memoir-v2';
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'books', updatedBook.id), updatedBook);
+                }
             };
 
             const shareBook = () => {
+                if (isLocalMode) {
+                    alert("โหมดใช้งานในเครื่อง (Local Mode) ไม่สามารถแชร์ลิงก์ได้ครับ หากต้องการแชร์ต้องใช้งานผ่านระบบ Cloud");
+                    return;
+                }
                 const url = `${window.location.origin}${window.location.pathname}?book=${activeBook.id}`;
                 const dummy = document.createElement("input");
                 document.body.appendChild(dummy);
@@ -200,17 +209,6 @@
                 document.body.removeChild(dummy);
                 alert("คัดลอกลิงก์แชร์แล้ว!");
             };
-
-            if (error) return (
-                <div className="flex flex-col items-center justify-center min-h-screen bg-[#fdfaf6] p-6 text-center">
-                    <div className="bg-red-50 p-8 rounded-3xl border border-red-100 max-w-md">
-                        <Icon name="alert-circle" size={48} className="text-red-400 mx-auto mb-4" />
-                        <h2 className="text-2xl font-serif font-bold text-stone-900 mb-2">เกิดข้อผิดพลาด</h2>
-                        <p className="text-stone-600 mb-6">{error}</p>
-                        <button onClick={() => window.location.reload()} className="bg-stone-900 text-white px-8 py-3 rounded-full font-bold">ลองใหม่อีกครั้ง</button>
-                    </div>
-                </div>
-            );
 
             if (loading) return (
                 <div className="flex flex-col items-center justify-center min-h-screen bg-[#fdfaf6]">
@@ -223,16 +221,18 @@
                 <div className="min-h-screen bg-[#f8f5f0] text-stone-800 p-6 md:p-12">
                     <header className="max-w-6xl mx-auto mb-12 flex flex-col md:flex-row md:justify-between md:items-end gap-6">
                         <div>
-                            <h1 className="text-6xl font-serif font-bold text-stone-900">Memoir.</h1>
-                            <p className="text-stone-500 font-serif italic text-lg mt-2 tracking-wide">"เก็บทุกความทรงจำไว้ในหน้ากระดาษดิจิทัล"</p>
+                            <div className="flex items-center gap-2 mb-2">
+                                <h1 className="text-6xl font-serif font-bold text-stone-900">Memoir.</h1>
+                                {isLocalMode && <span className="px-3 py-1 bg-amber-100 text-amber-700 text-[10px] rounded-full font-bold tracking-widest uppercase self-start mt-2">Local Mode</span>}
+                            </div>
+                            <p className="text-stone-500 font-serif italic text-lg tracking-wide">"เก็บทุกความทรงจำไว้ในหน้ากระดาษดิจิทัล"</p>
                         </div>
                         <button 
                             onClick={() => setShowCreateModal(true)} 
                             className="bg-stone-900 text-white px-8 py-4 rounded-full hover:bg-stone-800 transition-all shadow-xl flex items-center justify-center gap-2 group"
-                            disabled={!user}
                         >
                             <Icon name="plus" size={20} className="group-hover:rotate-90 transition-transform" /> 
-                            <span className="font-bold">{!user ? 'กำลังเชื่อมต่อ...' : 'เริ่มบันทึกใหม่'}</span>
+                            <span className="font-bold">เริ่มบันทึกใหม่</span>
                         </button>
                     </header>
 
@@ -248,7 +248,7 @@
                                 </div>
                                 <div className="pt-6 pb-4 px-4 text-center">
                                     <h3 className="text-2xl font-serif font-bold text-stone-800 truncate">{book.title}</h3>
-                                    <p className="text-stone-400 text-xs uppercase mt-2 tracking-widest">{book.pages?.length || 0} Pages • {book.likes || 0} Hearts</p>
+                                    <p className="text-stone-400 text-xs uppercase mt-2 tracking-widest">{book.pages?.length || 0} Pages</p>
                                 </div>
                             </div>
                         ))}
@@ -260,7 +260,6 @@
                         )}
                     </main>
 
-                    {/* Create Book Modal */}
                     {showCreateModal && (
                         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
                             <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-md" onClick={() => setShowCreateModal(false)} />
@@ -273,7 +272,7 @@
                                     autoFocus
                                     value={newBookTitle}
                                     onChange={(e) => setNewBookTitle(e.target.value)}
-                                    placeholder="เช่น ทริปญี่ปุ่น 2024, วันเกิดลูกสาว..." 
+                                    placeholder="เช่น ทริปญี่ปุ่น 2024..." 
                                     className="w-full p-5 rounded-2xl bg-stone-50 border border-stone-100 outline-none focus:ring-4 focus:ring-amber-100 transition-all text-lg"
                                     required
                                 />
@@ -298,7 +297,6 @@
                         </div>
                         <div className="flex gap-2">
                             <button onClick={() => window.print()} className="p-3 border border-stone-200 rounded-full hover:bg-stone-50 text-stone-600" title="พิมพ์/PDF"><Icon name="printer" size={20} /></button>
-                            <button onClick={handleLike} className="p-3 border border-stone-200 rounded-full hover:bg-red-50 hover:text-red-500 transition-all"><Icon name="heart" size={20} className={activeBook.likes > 0 ? "fill-current text-red-500" : ""} /></button>
                             {!isShareView && <button onClick={shareBook} className="p-3 border border-stone-200 rounded-full hover:bg-stone-50 text-stone-600"><Icon name="share-2" size={20} /></button>}
                             {!isShareView && (
                                 <button onClick={() => setShowEditor(true)} className="bg-stone-900 text-white px-6 py-2 rounded-full flex items-center gap-2 hover:bg-stone-800 shadow-lg transition-all">
@@ -325,12 +323,6 @@
                                 )}
                             </div>
                         ))}
-                        {(!activeBook.pages || activeBook.pages.length === 0) && (
-                            <div className="text-center py-40 bg-white/50 border-2 border-dashed border-stone-200 rounded-[3rem] no-print">
-                                <Icon name="camera" size={48} className="mx-auto text-stone-200 mb-6" />
-                                <p className="text-stone-400 font-serif italic text-xl">สมุดเล่มนี้ยังไม่มีรูปภาพ กดปุ่มเพิ่มรูปด้านบนได้เลย</p>
-                            </div>
-                        )}
                     </main>
 
                     {showEditor && (
