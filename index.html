@@ -54,25 +54,25 @@
 
         .polaroid {
             background: white;
-            padding: 3px 3px 10px 3px;
+            padding: 4px 4px 12px 4px;
             box-shadow: 1px 3px 8px rgba(0,0,0,0.15);
             border: 1px solid #f0f0f0;
             width: 100%;
         }
         
         @media (min-width: 768px) {
-            .polaroid { padding: 4px 4px 15px 4px; }
+            .polaroid { padding: 6px 6px 20px 6px; }
         }
 
         .photo-corner {
-            width: 10px; height: 10px;
-            border: 1.2px solid #4a3728;
+            width: 12px; height: 12px;
+            border: 1.5px solid #4a3728;
             position: absolute;
             opacity: 0.3;
             pointer-events: none;
         }
-        .corner-tl { top: 3px; left: 3px; border-right: 0; border-bottom: 0; }
-        .corner-br { bottom: 3px; right: 3px; border-left: 0; border-top: 0; }
+        .corner-tl { top: 4px; left: 4px; border-right: 0; border-bottom: 0; }
+        .corner-br { bottom: 4px; right: 4px; border-left: 0; border-top: 0; }
 
         .btn-vintage {
             background: #2c1e1a;
@@ -91,7 +91,7 @@
         .image-container {
             position: relative;
             background: #f3f4f6;
-            aspect-ratio: 3/2; /* บังคับอัตราส่วนภาพ 3:2 */
+            aspect-ratio: 3/2; /* ล็อกอัตราส่วนภาพ 3:2 */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -106,17 +106,11 @@
         .toast-enter { animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translate(-50%, 100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
 
-        /* Grid Journal: บังคับเรียงซ้ายไปขวา แถวละ 2-4 รูป */
+        /* Grid Journal: บังคับเรียงซ้ายไปขวา แถวละ 2 รูป อย่างเคร่งครัด */
         .grid-journal {
             display: grid;
-            gap: 1rem;
-            grid-template-cols: repeat(2, minmax(0, 1fr)); /* มือถือ 2 รูป */
-        }
-        @media (min-width: 640px) { 
-            .grid-journal { grid-template-cols: repeat(3, minmax(0, 1fr)); gap: 1.25rem; } /* ไอแพด/แท็บเล็ต 3 รูป */
-        }
-        @media (min-width: 1024px) { 
-            .grid-journal { grid-template-cols: repeat(4, minmax(0, 1fr)); gap: 1.5rem; } /* คอมพิวเตอร์ 4 รูป */
+            gap: 1.5rem;
+            grid-template-cols: repeat(2, minmax(0, 1fr));
         }
 
         .loader-ring {
@@ -147,14 +141,14 @@
     <script type="text/babel" data-type="module">
         const { useState, useEffect, useRef } = React;
 
-        // คีย์สำหรับการจัดเก็บข้อมูลถาวร
-        const STORAGE_KEY = 'memoir_stable_v19';
+        // คีย์สำหรับการจัดเก็บข้อมูลถาวร เพื่อแก้ปัญหาข้อมูลหาย
+        const STORAGE_KEY = 'memoir_permanent_v20';
 
         const firebaseConfig = (() => {
             try { return typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null; } 
             catch { return null; }
         })();
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'memoir-stable-v19';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'memoir-stable-v20';
 
         const Icon = ({ name, size = 16, className = "" }) => {
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
@@ -172,20 +166,23 @@
             const [formData, setFormData] = useState({ title: "", cover: null, pageImage: null, pageText: "" });
             const [isViewOnly, setIsViewOnly] = useState(false);
             const [toast, setToast] = useState(null);
+            const [isSaving, setIsSaving] = useState(false);
             
             const fileInputRef = useRef(null);
             const importInputRef = useRef(null);
 
-            // ฟังก์ชันช่วยบันทึกข้อมูลและอัปเดต State
+            // ฟังก์ชันบันทึกข้อมูลลง Storage ทันที
             const updateAndPersist = (newBooksList) => {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(newBooksList));
                 setBooks([...newBooksList]);
             };
 
-            // โหลดข้อมูลเมื่อเปิดหน้าจอ
+            // โหลดข้อมูลเมื่อเปิดหน้าจอ ครั้งแรก
             useEffect(() => {
                 const urlParams = new URLSearchParams(window.location.search);
                 const sharedBookId = urlParams.get('book');
+                
+                // ดึงข้อมูลจาก Local Storage ก่อนเสมอเพื่อให้เร็ว
                 const saved = localStorage.getItem(STORAGE_KEY);
                 let localBooks = saved ? JSON.parse(saved) : [];
                 setBooks(localBooks);
@@ -212,6 +209,7 @@
                                     const booksRef = collection(db, 'artifacts', appId, 'public', 'data', 'books');
                                     onSnapshot(booksRef, (snap) => {
                                         const cloudBooks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                                        
                                         if (sharedBookId) {
                                             const shared = cloudBooks.find(b => b.id === sharedBookId);
                                             if (shared) {
@@ -220,6 +218,7 @@
                                                 setIsBookOpened(false); 
                                             }
                                         }
+
                                         const myBooks = cloudBooks.filter(b => b.ownerId === u.uid);
                                         if (myBooks.length > 0) {
                                             updateAndPersist(myBooks);
@@ -230,6 +229,7 @@
                             });
                         } catch (e) { setLoading(false); }
                     } else {
+                        // โหมด Local
                         if (sharedBookId) {
                             const shared = localBooks.find(b => b.id === sharedBookId);
                             if (shared) { setActiveBook(shared); setIsViewOnly(true); setIsBookOpened(false); }
@@ -257,7 +257,7 @@
                             if (w > MAX_WIDTH) { h *= MAX_WIDTH / w; w = MAX_WIDTH; }
                             canvas.width = w; canvas.height = h;
                             canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                            res(canvas.toDataURL('image/jpeg', 0.65));
+                            res(canvas.toDataURL('image/jpeg', 0.7));
                         };
                     };
                 });
@@ -265,6 +265,7 @@
 
             const handleCreate = async (e) => {
                 e.preventDefault();
+                setIsSaving(true);
                 const newBook = {
                     id: Date.now().toString(),
                     title: formData.title || "ความทรงจำของฉัน",
@@ -286,12 +287,14 @@
                 }
                 setModal(null);
                 setFormData({ title: "", cover: null, pageImage: null, pageText: "" });
-                showToast("สร้างสมุดใหม่สำเร็จ!");
+                setIsSaving(false);
+                showToast("สร้างหน้าปกเรียบร้อย!");
             };
 
             const handleUpdatePage = async (e) => {
                 e.preventDefault();
                 if (!activeBook) return;
+                setIsSaving(true);
 
                 let updatedPages;
                 if (modal === 'edit-page' && editTarget) {
@@ -299,7 +302,10 @@
                         p.id === editTarget.id ? { ...p, image: formData.pageImage || p.image, text: formData.pageText } : p
                     );
                 } else {
-                    if (!formData.pageImage) return;
+                    if (!formData.pageImage) {
+                        setIsSaving(false);
+                        return;
+                    }
                     const newPage = { 
                         id: Date.now().toString(), 
                         image: formData.pageImage, 
@@ -312,6 +318,7 @@
                 const updatedBook = { ...activeBook, pages: updatedPages };
                 const nextBooks = books.map(b => b.id === activeBook.id ? updatedBook : b);
                 
+                // บันทึกถาวรลงเครื่องทันทีเพื่อกันหายเมื่อรีเฟรช
                 updateAndPersist(nextBooks);
                 setActiveBook(updatedBook);
 
@@ -320,12 +327,15 @@
                         const { getFirestore, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
                         const db = getFirestore();
                         await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'books', activeBook.id), { pages: updatedPages });
-                    } catch (err) {}
+                    } catch (err) {
+                        console.error("Firebase update error", err);
+                    }
                 }
 
                 setModal(null); 
                 setEditTarget(null); 
                 setFormData({ title: "", cover: null, pageImage: null, pageText: "" });
+                setIsSaving(false);
                 showToast("บันทึกความทรงจำแล้ว!");
             };
 
@@ -347,7 +357,7 @@
                 const copy = { ...activeBook, id: Date.now().toString(), ownerId: user?.uid, createdAt: Date.now() };
                 updateAndPersist([...books, copy]);
                 setIsViewOnly(false);
-                showToast("บันทึกลงชั้นวางของคุณแล้ว!");
+                showToast("บันทึกลงเครื่องเรียบร้อย!");
             };
 
             if (loading) return (
@@ -397,7 +407,7 @@
 
                     <div className="mt-20 text-center">
                         <label className="cursor-pointer text-white/40 hover:text-white transition-colors font-mali italic text-sm flex items-center justify-center gap-2">
-                            <Icon name="upload" size={16} /> นำเข้าไฟล์สมุด (.json)
+                            <Icon name="upload" size={16} /> นำเข้าไฟล์ (.json)
                             <input type="file" ref={importInputRef} className="hidden" accept=".json" onChange={(e) => {
                                 const file = e.target.files[0];
                                 if (!file) return;
@@ -417,8 +427,8 @@
                     {/* MODAL: CREATE BOOK */}
                     {modal === 'create' && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-                            <form onSubmit={handleCreate} className="vintage-paper max-w-sm w-full p-8 space-y-8 animate-in zoom-in-95">
-                                <h3 className="text-2xl font-serif font-black italic border-b border-stone-200 pb-2 text-stone-800 flex justify-between">เริ่มเล่มใหม่ <button type="button" onClick={() => setModal(null)}><Icon name="x" size={24}/></button></h3>
+                            <form onSubmit={handleCreate} className="vintage-paper max-w-sm w-full p-8 space-y-8 animate-in zoom-in-95 shadow-2xl">
+                                <h3 className="text-2xl font-serif font-black italic border-b border-stone-200 pb-2 text-stone-800 flex justify-between">สร้างปกใหม่ <button type="button" onClick={() => setModal(null)}><Icon name="x" size={24}/></button></h3>
                                 <div className="space-y-6">
                                     <div onClick={() => fileInputRef.current.click()} className="aspect-[3/2] bg-stone-100 border-2 border-stone-200 flex flex-col items-center justify-center cursor-pointer overflow-hidden rounded-sm group relative">
                                         {formData.cover ? <img src={formData.cover} className="w-full h-full object-cover" /> : <div className="text-center"><Icon name="image" size={32} className="text-stone-300 mx-auto mb-2" /><p className="font-mali text-stone-400 text-sm">เลือกรูปหน้าปก</p></div>}
@@ -430,9 +440,11 @@
                                             }
                                         }} />
                                     </div>
-                                    <input className="w-full bg-transparent border-b-2 border-stone-300 py-2 font-mali text-xl outline-none focus:border-stone-800 transition-colors text-stone-900" placeholder="ตั้งชื่อสมุด..." value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required />
+                                    <input className="w-full bg-transparent border-b-2 border-stone-300 py-2 font-mali text-xl outline-none focus:border-stone-800 transition-colors text-stone-900 placeholder:text-stone-300" placeholder="ตั้งชื่อความทรงจำ..." value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required />
                                 </div>
-                                <button type="submit" className="w-full btn-vintage text-xl py-3 font-mali">สร้างหน้าปก</button>
+                                <button type="submit" disabled={isSaving} className="w-full btn-vintage text-xl py-3 font-mali disabled:opacity-50">
+                                    {isSaving ? "กำลังบันทึก..." : "สร้างสมุดบันทึก"}
+                                </button>
                             </form>
                         </div>
                     )}
@@ -450,20 +462,20 @@
                             </div>
                             <div className="mt-8 text-center px-2 pb-6">
                                 <h2 className="text-3xl font-serif font-black text-stone-900 mb-2 leading-tight">{activeBook.title}</h2>
-                                <p className="font-mali text-stone-400 text-xs">บันทึกเมื่อ {new Date(activeBook.createdAt).toLocaleDateString()}</p>
+                                <p className="font-mali text-stone-400 text-xs">สร้างเมื่อ {new Date(activeBook.createdAt).toLocaleDateString()}</p>
                             </div>
                         </div>
                         <div className="flex flex-col gap-4 items-center">
                             <button onClick={() => setIsBookOpened(true)} className="btn-vintage w-full py-5 text-2xl shadow-2xl active:scale-95 transition-transform font-mali">
-                                <Icon name="book-open" size={24} /> เปิดสมุดบันทึก
+                                <Icon name="book-open" size={24} /> เปิดดูความทรงจำ
                             </button>
-                            <button onClick={() => { setActiveBook(null); window.history.pushState({}, '', window.location.pathname); }} className="text-white/50 hover:text-white transition-colors text-sm font-mali italic underline">กลับสู่ชั้นวาง</button>
+                            <button onClick={() => { setActiveBook(null); window.history.pushState({}, '', window.location.pathname); }} className="text-white/50 hover:text-white transition-colors text-sm font-mali italic underline">กลับไปที่ชั้นวาง</button>
                         </div>
                     </div>
                 </div>
             );
 
-            // --- VIEW: JOURNAL ---
+            // --- VIEW: JOURNAL (Strict 2-Column Grid) ---
             return (
                 <div className="relative z-10 min-h-screen flex flex-col page-transition">
                     <nav className="p-3 md:p-4 flex justify-between items-center sticky top-0 w-full z-50 bg-[#1a110f]/90 backdrop-blur-lg border-b border-white/10">
@@ -474,17 +486,17 @@
                             <button onClick={handleShare} className="p-2.5 bg-white/15 text-white rounded-full hover:bg-white/30 transition-all shadow-lg" title="แชร์"><Icon name="share-2" size={18} /></button>
                             <button onClick={handleExport} className="p-2.5 bg-white/15 text-white rounded-full hover:bg-white/30 transition-all shadow-lg" title="ดาวน์โหลด"><Icon name="download" size={18} /></button>
                             {isViewOnly ? (
-                                <button onClick={saveSharedToShelf} className="bg-amber-200 text-amber-950 px-4 py-1.5 rounded-full font-mali font-bold text-xs shadow-2xl hover:bg-white transition-all">เก็บสำเนาไว้</button>
+                                <button onClick={saveSharedToShelf} className="bg-amber-200 text-amber-950 px-4 py-1.5 rounded-full font-mali font-bold text-xs shadow-2xl hover:bg-white transition-all">บันทึกเล่มนี้</button>
                             ) : (
                                 <button onClick={() => { 
                                     setFormData({ title: "", cover: null, pageImage: null, pageText: "" });
                                     setModal('add-page'); 
-                                }} className="bg-amber-200 text-amber-950 px-5 py-2 rounded-full font-mali font-bold text-xs shadow-2xl hover:bg-white transition-all">เพิ่มรูป</button>
+                                }} className="bg-amber-200 text-amber-950 px-5 py-2 rounded-full font-mali font-bold text-xs shadow-2xl hover:bg-white transition-all">เพิ่มความทรงจำ</button>
                             )}
                         </div>
                     </nav>
 
-                    <main className="max-w-[1200px] mx-auto w-full pt-8 pb-40 px-4 md:px-8">
+                    <main className="max-w-[1000px] mx-auto w-full pt-8 pb-40 px-4 md:px-8">
                         <header className="text-center mb-12">
                             <h2 className="text-4xl sm:text-7xl font-signature text-amber-100/60 drop-shadow-xl">{activeBook.title}</h2>
                         </header>
@@ -492,7 +504,7 @@
                         <div className="grid-journal">
                             {(activeBook.pages || []).map((page) => (
                                 <div key={page.id} className="relative group" style={{ transform: `rotate(${page.rotation}deg)` }}>
-                                    <div className="vintage-paper p-2 sm:p-3 h-full flex flex-col transition-transform hover:scale-105 hover:z-30">
+                                    <div className="vintage-paper p-2 sm:p-4 h-full flex flex-col transition-transform hover:scale-105 hover:z-30 shadow-lg">
                                         <div className="photo-corner corner-tl" />
                                         <div className="photo-corner corner-br" />
                                         <div className="polaroid mb-2">
@@ -532,8 +544,8 @@
                         {(!activeBook.pages || activeBook.pages.length === 0) && (
                             <div className="max-w-md mx-auto text-center py-24 vintage-paper border-4 border-dashed border-stone-300 bg-white/40 flex flex-col items-center px-4">
                                 <Icon name="camera" size={48} className="text-stone-300 mb-4 opacity-50" />
-                                <h3 className="text-2xl font-mali font-bold italic text-stone-400 mb-6 text-center">สมุดยังว่างเปล่า... มาแปะรูปกัน!</h3>
-                                {!isViewOnly && <button onClick={() => setModal('add-page')} className="btn-vintage px-10 py-3 text-lg font-mali">เพิ่มรูปแรก</button>}
+                                <h3 className="text-2xl font-mali font-bold italic text-stone-400 mb-6 text-center">สมุดยังว่างเปล่า... มาแปะรูปแรกกัน!</h3>
+                                {!isViewOnly && <button onClick={() => setModal('add-page')} className="btn-vintage px-10 py-3 text-lg font-mali shadow-xl">เพิ่มรูปแรก</button>}
                             </div>
                         )}
                     </main>
@@ -541,14 +553,14 @@
                     {/* MODAL: ADD/EDIT PAGE */}
                     {(modal === 'add-page' || modal === 'edit-page') && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 bg-black/90 backdrop-blur-xl">
-                            <form onSubmit={handleUpdatePage} className="vintage-paper max-w-sm w-full p-6 space-y-6 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+                            <form onSubmit={handleUpdatePage} className="vintage-paper max-w-sm w-full p-6 space-y-6 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto shadow-2xl">
                                 <div className="flex justify-between items-center border-b border-stone-200 pb-3">
-                                    <h3 className="text-2xl font-serif font-black italic text-stone-900">{modal === 'add-page' ? 'เพิ่มรูปใหม่' : 'แก้ไข'}</h3>
-                                    <button type="button" onClick={() => { setModal(null); setEditTarget(null); setFormData({ title: "", cover: null, pageImage: null, pageText: "" }); }} className="p-2 text-stone-400"><Icon name="x" size={24} /></button>
+                                    <h3 className="text-2xl font-serif font-black italic text-stone-900">{modal === 'add-page' ? 'แปะรูปใหม่' : 'แก้ไขความทรงจำ'}</h3>
+                                    <button type="button" onClick={() => { setModal(null); setEditTarget(null); setIsSaving(false); }} className="p-2 text-stone-400"><Icon name="x" size={24} /></button>
                                 </div>
                                 <div className="space-y-4">
                                     <div onClick={() => fileInputRef.current.click()} className="aspect-[3/2] bg-stone-100 border-2 border-stone-200 flex flex-col items-center justify-center cursor-pointer overflow-hidden rounded-sm relative shadow-inner group">
-                                        {(formData.pageImage) ? <img src={formData.pageImage} className="w-full h-full object-cover" /> : <div className="text-center p-4"><Icon name="upload-cloud" size={36} className="text-stone-300 mx-auto mb-2" /><p className="font-mali text-stone-400 text-sm text-center">เลือกรูปถ่ายความทรงจำ (3:2)</p></div>}
+                                        {(formData.pageImage) ? <img src={formData.pageImage} className="w-full h-full object-cover" /> : <div className="text-center p-4"><Icon name="upload-cloud" size={36} className="text-stone-300 mx-auto mb-2" /><p className="font-mali text-stone-400 text-sm text-center">เลือกรูปถ่าย (3:2)</p></div>}
                                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={async e => {
                                             const file = e.target.files[0];
                                             if (file) {
@@ -559,7 +571,9 @@
                                     </div>
                                     <textarea className="w-full p-4 bg-stone-50 border-2 border-stone-100 rounded-sm font-handwriting text-2xl outline-none focus:ring-4 focus:ring-amber-100 transition-all resize-none shadow-inner text-stone-800 leading-snug" placeholder="เล่าความรู้สึกสั้นๆ..." rows="4" value={formData.pageText} onChange={e => setFormData({...formData, pageText: e.target.value})} />
                                 </div>
-                                <button type="submit" disabled={!formData.pageImage && modal !== 'edit-page'} className="w-full btn-vintage text-2xl py-4 shadow-2xl disabled:opacity-30 font-mali">บันทึก</button>
+                                <button type="submit" disabled={isSaving || (!formData.pageImage && modal !== 'edit-page')} className="w-full btn-vintage text-2xl py-4 shadow-2xl disabled:opacity-50 font-mali">
+                                    {isSaving ? "กำลังบันทึก..." : "บันทึกลงสมุด"}
+                                </button>
                             </form>
                         </div>
                     )}
