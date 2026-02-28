@@ -46,38 +46,38 @@
             background-color: var(--paper);
             background-image: url("https://www.transparenttextures.com/patterns/old-paper.png");
             box-shadow: 
-                -1px 2px 6px rgba(0,0,0,0.2),
-                inset 0 0 30px rgba(139, 69, 19, 0.05);
+                -1px 2px 4px rgba(0,0,0,0.2),
+                inset 0 0 20px rgba(139, 69, 19, 0.05);
             border-radius: 2px;
             position: relative;
         }
 
         .polaroid {
             background: white;
-            padding: 5px 5px 16px 5px;
-            box-shadow: 2px 5px 12px rgba(0,0,0,0.15);
+            padding: 3px 3px 10px 3px;
+            box-shadow: 1px 3px 8px rgba(0,0,0,0.15);
             border: 1px solid #f0f0f0;
             width: 100%;
         }
         
         @media (min-width: 768px) {
-            .polaroid { padding: 6px 6px 20px 6px; }
+            .polaroid { padding: 4px 4px 15px 4px; }
         }
 
         .photo-corner {
-            width: 12px; height: 12px;
-            border: 1.5px solid #4a3728;
+            width: 10px; height: 10px;
+            border: 1.2px solid #4a3728;
             position: absolute;
             opacity: 0.3;
             pointer-events: none;
         }
-        .corner-tl { top: 4px; left: 4px; border-right: 0; border-bottom: 0; }
-        .corner-br { bottom: 4px; right: 4px; border-left: 0; border-top: 0; }
+        .corner-tl { top: 3px; left: 3px; border-right: 0; border-bottom: 0; }
+        .corner-br { bottom: 3px; right: 3px; border-left: 0; border-top: 0; }
 
         .btn-vintage {
             background: #2c1e1a;
             color: #fef3c7;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 4px;
             font-family: 'Mali', sans-serif;
             font-weight: bold;
@@ -91,7 +91,7 @@
         .image-container {
             position: relative;
             background: #f3f4f6;
-            aspect-ratio: 3/2; /* ล็อกอัตราส่วน 3:2 ตามต้องการ */
+            aspect-ratio: 3/2; /* บังคับอัตราส่วนภาพ 3:2 */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -106,17 +106,17 @@
         .toast-enter { animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translate(-50%, 100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
 
-        /* Grid Journal: ล็อก 3-4 คอลัมน์บนหน้าจอใหญ่เพื่อให้รูปมีขนาดจุ๋มจิ๋ม */
+        /* Grid Journal: บังคับเรียงซ้ายไปขวา แถวละ 2-4 รูป */
         .grid-journal {
             display: grid;
-            gap: 1.25rem;
-            grid-template-cols: repeat(2, minmax(0, 1fr));
+            gap: 1rem;
+            grid-template-cols: repeat(2, minmax(0, 1fr)); /* มือถือ 2 รูป */
         }
         @media (min-width: 640px) { 
-            .grid-journal { grid-template-cols: repeat(3, minmax(0, 1fr)); gap: 1.5rem; } 
+            .grid-journal { grid-template-cols: repeat(3, minmax(0, 1fr)); gap: 1.25rem; } /* ไอแพด/แท็บเล็ต 3 รูป */
         }
         @media (min-width: 1024px) { 
-            .grid-journal { grid-template-cols: repeat(4, minmax(0, 1fr)); gap: 1.75rem; } 
+            .grid-journal { grid-template-cols: repeat(4, minmax(0, 1fr)); gap: 1.5rem; } /* คอมพิวเตอร์ 4 รูป */
         }
 
         .loader-ring {
@@ -147,13 +147,14 @@
     <script type="text/babel" data-type="module">
         const { useState, useEffect, useRef } = React;
 
-        const STORAGE_KEY = 'memoir_v17_final_fix';
+        // คีย์สำหรับการจัดเก็บข้อมูลถาวร
+        const STORAGE_KEY = 'memoir_stable_v19';
 
         const firebaseConfig = (() => {
             try { return typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null; } 
             catch { return null; }
         })();
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'memoir-v17-app';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'memoir-stable-v19';
 
         const Icon = ({ name, size = 16, className = "" }) => {
             useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
@@ -175,13 +176,13 @@
             const fileInputRef = useRef(null);
             const importInputRef = useRef(null);
 
-            // Sync with local storage helper
-            const syncStorage = (data) => {
-                setBooks(data);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            // ฟังก์ชันช่วยบันทึกข้อมูลและอัปเดต State
+            const updateAndPersist = (newBooksList) => {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(newBooksList));
+                setBooks([...newBooksList]);
             };
 
-            // Load Data
+            // โหลดข้อมูลเมื่อเปิดหน้าจอ
             useEffect(() => {
                 const urlParams = new URLSearchParams(window.location.search);
                 const sharedBookId = urlParams.get('book');
@@ -221,7 +222,7 @@
                                         }
                                         const myBooks = cloudBooks.filter(b => b.ownerId === u.uid);
                                         if (myBooks.length > 0) {
-                                            syncStorage(myBooks);
+                                            updateAndPersist(myBooks);
                                         }
                                         setLoading(false); clearTimeout(timer);
                                     }, () => { setLoading(false); });
@@ -251,12 +252,12 @@
                         img.src = e.target.result;
                         img.onload = () => {
                             const canvas = document.createElement('canvas');
-                            const MAX_WIDTH = 1000;
+                            const MAX_WIDTH = 1000; 
                             let w = img.width, h = img.height;
                             if (w > MAX_WIDTH) { h *= MAX_WIDTH / w; w = MAX_WIDTH; }
                             canvas.width = w; canvas.height = h;
                             canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                            res(canvas.toDataURL('image/jpeg', 0.7));
+                            res(canvas.toDataURL('image/jpeg', 0.65));
                         };
                     };
                 });
@@ -272,8 +273,8 @@
                     createdAt: Date.now(),
                     ownerId: user?.uid
                 };
-                const updated = [...books, newBook];
-                syncStorage(updated);
+                const updatedList = [...books, newBook];
+                updateAndPersist(updatedList);
                 setActiveBook(newBook);
                 setIsBookOpened(true);
                 
@@ -285,7 +286,7 @@
                 }
                 setModal(null);
                 setFormData({ title: "", cover: null, pageImage: null, pageText: "" });
-                showToast("สร้างสมุดสำเร็จ!");
+                showToast("สร้างสมุดใหม่สำเร็จ!");
             };
 
             const handleUpdatePage = async (e) => {
@@ -311,8 +312,7 @@
                 const updatedBook = { ...activeBook, pages: updatedPages };
                 const nextBooks = books.map(b => b.id === activeBook.id ? updatedBook : b);
                 
-                // บันทึกลง Storage และอัปเดต State ทันที
-                syncStorage(nextBooks);
+                updateAndPersist(nextBooks);
                 setActiveBook(updatedBook);
 
                 if (firebaseConfig) {
@@ -345,7 +345,7 @@
 
             const saveSharedToShelf = () => {
                 const copy = { ...activeBook, id: Date.now().toString(), ownerId: user?.uid, createdAt: Date.now() };
-                syncStorage([...books, copy]);
+                updateAndPersist([...books, copy]);
                 setIsViewOnly(false);
                 showToast("บันทึกลงชั้นวางของคุณแล้ว!");
             };
@@ -383,9 +383,9 @@
                                     </div>
                                     <button onClick={(e) => { 
                                         e.stopPropagation(); 
-                                        if(confirm("ลบสมุดเล่มนี้?")) {
+                                        if(confirm("ลบสมุดเล่มนี้ทิ้งใช่หรือไม่?")) {
                                             const updated = books.filter(b => b.id !== book.id);
-                                            syncStorage(updated);
+                                            updateAndPersist(updated);
                                         }
                                     }} className="absolute top-1 right-1 p-1 bg-white/90 rounded-full text-stone-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all shadow-md z-20">
                                         <Icon name="trash-2" size={12} />
@@ -397,7 +397,7 @@
 
                     <div className="mt-20 text-center">
                         <label className="cursor-pointer text-white/40 hover:text-white transition-colors font-mali italic text-sm flex items-center justify-center gap-2">
-                            <Icon name="upload" size={16} /> นำเข้าไฟล์ (.json)
+                            <Icon name="upload" size={16} /> นำเข้าไฟล์สมุด (.json)
                             <input type="file" ref={importInputRef} className="hidden" accept=".json" onChange={(e) => {
                                 const file = e.target.files[0];
                                 if (!file) return;
@@ -406,7 +406,7 @@
                                     try {
                                         const b = JSON.parse(ev.target.result);
                                         b.id = Date.now().toString(); b.ownerId = user?.uid;
-                                        syncStorage([...books, b]); showToast("นำเข้าสมุดสำเร็จ!");
+                                        updateAndPersist([...books, b]); showToast("นำเข้าสมุดสำเร็จ!");
                                     } catch (err) { showToast("ไฟล์ไม่ถูกต้อง"); }
                                 };
                                 r.readAsText(file);
@@ -418,18 +418,21 @@
                     {modal === 'create' && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
                             <form onSubmit={handleCreate} className="vintage-paper max-w-sm w-full p-8 space-y-8 animate-in zoom-in-95">
-                                <h3 className="text-2xl font-serif font-black italic border-b border-stone-200 pb-2 text-stone-800 flex justify-between">เริ่มบันทึกใหม่ <button type="button" onClick={() => setModal(null)}><Icon name="x" size={24}/></button></h3>
+                                <h3 className="text-2xl font-serif font-black italic border-b border-stone-200 pb-2 text-stone-800 flex justify-between">เริ่มเล่มใหม่ <button type="button" onClick={() => setModal(null)}><Icon name="x" size={24}/></button></h3>
                                 <div className="space-y-6">
                                     <div onClick={() => fileInputRef.current.click()} className="aspect-[3/2] bg-stone-100 border-2 border-stone-200 flex flex-col items-center justify-center cursor-pointer overflow-hidden rounded-sm group relative">
                                         {formData.cover ? <img src={formData.cover} className="w-full h-full object-cover" /> : <div className="text-center"><Icon name="image" size={32} className="text-stone-300 mx-auto mb-2" /><p className="font-mali text-stone-400 text-sm">เลือกรูปหน้าปก</p></div>}
                                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={async e => {
                                             const file = e.target.files[0];
-                                            if (file) setFormData({...formData, cover: await compress(file)});
+                                            if (file) {
+                                                const compressed = await compress(file);
+                                                setFormData(prev => ({...prev, cover: compressed}));
+                                            }
                                         }} />
                                     </div>
-                                    <input className="w-full bg-transparent border-b-2 border-stone-300 py-2 font-mali text-xl outline-none focus:border-stone-800 transition-colors text-stone-900" placeholder="ตั้งชื่อความทรงจำ..." value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required />
+                                    <input className="w-full bg-transparent border-b-2 border-stone-300 py-2 font-mali text-xl outline-none focus:border-stone-800 transition-colors text-stone-900" placeholder="ตั้งชื่อสมุด..." value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} required />
                                 </div>
-                                <button type="submit" className="w-full btn-vintage text-xl py-3 font-mali">สร้างสมุด</button>
+                                <button type="submit" className="w-full btn-vintage text-xl py-3 font-mali">สร้างหน้าปก</button>
                             </form>
                         </div>
                     )}
@@ -447,14 +450,14 @@
                             </div>
                             <div className="mt-8 text-center px-2 pb-6">
                                 <h2 className="text-3xl font-serif font-black text-stone-900 mb-2 leading-tight">{activeBook.title}</h2>
-                                <p className="font-mali text-stone-400 text-xs">สร้างเมื่อ {new Date(activeBook.createdAt).toLocaleDateString()}</p>
+                                <p className="font-mali text-stone-400 text-xs">บันทึกเมื่อ {new Date(activeBook.createdAt).toLocaleDateString()}</p>
                             </div>
                         </div>
                         <div className="flex flex-col gap-4 items-center">
                             <button onClick={() => setIsBookOpened(true)} className="btn-vintage w-full py-5 text-2xl shadow-2xl active:scale-95 transition-transform font-mali">
-                                <Icon name="book-open" size={24} /> เปิดดูความทรงจำ
+                                <Icon name="book-open" size={24} /> เปิดสมุดบันทึก
                             </button>
-                            <button onClick={() => { setActiveBook(null); window.history.pushState({}, '', window.location.pathname); }} className="text-white/50 hover:text-white transition-colors text-sm font-mali italic underline">กลับไปที่ชั้นวาง</button>
+                            <button onClick={() => { setActiveBook(null); window.history.pushState({}, '', window.location.pathname); }} className="text-white/50 hover:text-white transition-colors text-sm font-mali italic underline">กลับสู่ชั้นวาง</button>
                         </div>
                     </div>
                 </div>
@@ -468,15 +471,15 @@
                             <Icon name="book" size={12} /> <span>หน้าปก</span>
                         </button>
                         <div className="flex gap-2">
-                            <button onClick={handleShare} className="p-2.5 bg-white/15 text-white rounded-full hover:bg-white/30 transition-all shadow-lg" title="แชร์ลิงก์"><Icon name="share-2" size={18} /></button>
-                            <button onClick={handleExport} className="p-2.5 bg-white/15 text-white rounded-full hover:bg-white/30 transition-all shadow-lg" title="ส่งออกไฟล์"><Icon name="download" size={18} /></button>
+                            <button onClick={handleShare} className="p-2.5 bg-white/15 text-white rounded-full hover:bg-white/30 transition-all shadow-lg" title="แชร์"><Icon name="share-2" size={18} /></button>
+                            <button onClick={handleExport} className="p-2.5 bg-white/15 text-white rounded-full hover:bg-white/30 transition-all shadow-lg" title="ดาวน์โหลด"><Icon name="download" size={18} /></button>
                             {isViewOnly ? (
-                                <button onClick={saveSharedToShelf} className="bg-amber-200 text-amber-950 px-4 py-1.5 rounded-full font-mali font-bold text-xs shadow-2xl hover:bg-white transition-all">บันทึกเล่มนี้</button>
+                                <button onClick={saveSharedToShelf} className="bg-amber-200 text-amber-950 px-4 py-1.5 rounded-full font-mali font-bold text-xs shadow-2xl hover:bg-white transition-all">เก็บสำเนาไว้</button>
                             ) : (
                                 <button onClick={() => { 
                                     setFormData({ title: "", cover: null, pageImage: null, pageText: "" });
                                     setModal('add-page'); 
-                                }} className="bg-amber-200 text-amber-950 px-5 py-2 rounded-full font-mali font-bold text-xs shadow-2xl hover:bg-white transition-all">เพิ่มความทรงจำ</button>
+                                }} className="bg-amber-200 text-amber-950 px-5 py-2 rounded-full font-mali font-bold text-xs shadow-2xl hover:bg-white transition-all">เพิ่มรูป</button>
                             )}
                         </div>
                     </nav>
@@ -514,7 +517,7 @@
                                                         const updatedPages = activeBook.pages.filter(p => p.id !== page.id);
                                                         const updatedBook = { ...activeBook, pages: updatedPages };
                                                         const nextBooks = books.map(b => b.id === activeBook.id ? updatedBook : b);
-                                                        syncStorage(nextBooks); 
+                                                        updateAndPersist(nextBooks); 
                                                         setActiveBook(updatedBook);
                                                         showToast("ลบรูปแล้ว");
                                                     }
@@ -529,7 +532,7 @@
                         {(!activeBook.pages || activeBook.pages.length === 0) && (
                             <div className="max-w-md mx-auto text-center py-24 vintage-paper border-4 border-dashed border-stone-300 bg-white/40 flex flex-col items-center px-4">
                                 <Icon name="camera" size={48} className="text-stone-300 mb-4 opacity-50" />
-                                <h3 className="text-2xl font-mali font-bold italic text-stone-400 mb-6 text-center">สมุดยังว่างเปล่า... มาเริ่มแปะรูปกัน!</h3>
+                                <h3 className="text-2xl font-mali font-bold italic text-stone-400 mb-6 text-center">สมุดยังว่างเปล่า... มาแปะรูปกัน!</h3>
                                 {!isViewOnly && <button onClick={() => setModal('add-page')} className="btn-vintage px-10 py-3 text-lg font-mali">เพิ่มรูปแรก</button>}
                             </div>
                         )}
@@ -540,8 +543,8 @@
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 bg-black/90 backdrop-blur-xl">
                             <form onSubmit={handleUpdatePage} className="vintage-paper max-w-sm w-full p-6 space-y-6 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto">
                                 <div className="flex justify-between items-center border-b border-stone-200 pb-3">
-                                    <h3 className="text-2xl font-serif font-black italic text-stone-900">{modal === 'add-page' ? 'แปะรูปใหม่' : 'แก้ไขข้อความ'}</h3>
-                                    <button type="button" onClick={() => { setModal(null); setEditTarget(null); }} className="p-2 text-stone-400"><Icon name="x" size={24} /></button>
+                                    <h3 className="text-2xl font-serif font-black italic text-stone-900">{modal === 'add-page' ? 'เพิ่มรูปใหม่' : 'แก้ไข'}</h3>
+                                    <button type="button" onClick={() => { setModal(null); setEditTarget(null); setFormData({ title: "", cover: null, pageImage: null, pageText: "" }); }} className="p-2 text-stone-400"><Icon name="x" size={24} /></button>
                                 </div>
                                 <div className="space-y-4">
                                     <div onClick={() => fileInputRef.current.click()} className="aspect-[3/2] bg-stone-100 border-2 border-stone-200 flex flex-col items-center justify-center cursor-pointer overflow-hidden rounded-sm relative shadow-inner group">
@@ -556,7 +559,7 @@
                                     </div>
                                     <textarea className="w-full p-4 bg-stone-50 border-2 border-stone-100 rounded-sm font-handwriting text-2xl outline-none focus:ring-4 focus:ring-amber-100 transition-all resize-none shadow-inner text-stone-800 leading-snug" placeholder="เล่าความรู้สึกสั้นๆ..." rows="4" value={formData.pageText} onChange={e => setFormData({...formData, pageText: e.target.value})} />
                                 </div>
-                                <button type="submit" disabled={!formData.pageImage && modal !== 'edit-page'} className="w-full btn-vintage text-2xl py-4 shadow-2xl disabled:opacity-30 font-mali">บันทึกลงสมุด</button>
+                                <button type="submit" disabled={!formData.pageImage && modal !== 'edit-page'} className="w-full btn-vintage text-2xl py-4 shadow-2xl disabled:opacity-30 font-mali">บันทึก</button>
                             </form>
                         </div>
                     )}
