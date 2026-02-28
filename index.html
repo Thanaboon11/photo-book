@@ -3,260 +3,362 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Family Photobook</title>
-    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;700&family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
+    <title>Memoir - Digital Photo Book</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        :root {
-            --bg-color: #f7f3ee;
-            --sage: #7d8471;
-            --gold: #b88d5c;
-            --tape: rgba(211, 197, 163, 0.4);
-        }
-
-        body {
-            font-family: 'Sarabun', sans-serif;
-            background-color: var(--bg-color);
-            background-image: radial-gradient(#d1ccc0 1px, transparent 1px);
-            background-size: 25px 25px;
-            margin: 0; padding-bottom: 100px; color: #444;
-        }
-
-        /* Header */
-        header {
-            text-align: center;
-            padding: 40px 20px;
-            background: white;
-            border-bottom: 2px solid #ddd;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        }
-
-        h1 { font-family: 'Mali', cursive; font-size: 2.2rem; color: var(--sage); margin: 0; }
-        .storage-status { font-size: 0.75rem; color: #888; margin-top: 10px; }
-
-        /* Controls */
-        .controls { display: flex; justify-content: center; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
-        .btn-mini { background: none; border: 1px solid var(--sage); color: var(--sage); padding: 5px 15px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-family: 'Mali'; }
-        .btn-mini.danger { border-color: #ff9999; color: #ff9999; }
-
-        /* Photobook Grid */
-        .album-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 45px;
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-
-        .polaroid {
-            background: white;
-            padding: 15px 15px 50px 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            position: relative;
-            transition: 0.3s;
-        }
-        .polaroid:nth-child(odd) { transform: rotate(-1.5deg); }
-        .polaroid:nth-child(even) { transform: rotate(2deg); }
-        .polaroid:hover { transform: rotate(0deg) scale(1.03); z-index: 10; }
-
-        /* Washi Tape */
-        .polaroid::before {
-            content: ''; position: absolute; top: -15px; left: 50%;
-            transform: translateX(-50%); width: 90px; height: 30px;
-            background: var(--tape); box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-        }
-
-        .polaroid img { width: 100%; height: 260px; object-fit: cover; border: 1px solid #f0f0f0; }
-        .caption { font-family: 'Mali', cursive; text-align: center; margin-top: 18px; font-size: 1.3rem; }
-        .caption small { display: block; font-size: 0.9rem; color: var(--gold); margin-top: 5px; }
-
-        /* Card Actions */
-        .card-actions {
-            position: absolute; bottom: 10px; width: calc(100% - 30px);
-            display: flex; justify-content: center; gap: 20px;
-            opacity: 0; transition: 0.3s;
-        }
-        .polaroid:hover .card-actions { opacity: 1; }
-        .btn-action { background: none; border: none; cursor: pointer; color: #aaa; font-size: 0.75rem; }
-        .btn-action:hover { color: var(--sage); }
-
-        /* Add Button & Modal */
-        .btn-add { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--sage); color: white; border: none; font-size: 30px; cursor: pointer; box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 1000; }
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,100;0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
         
-        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
-        .modal-content { background: white; padding: 25px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
-        .btn-save { width: 100%; background: var(--sage); color: white; border: none; padding: 15px; border-radius: 10px; font-family: 'Mali'; font-size: 1.1rem; cursor: pointer; }
+        body { font-family: 'Sarabun', sans-serif; }
+        .font-serif { font-family: 'Playfair Display', serif; }
+        
+        .paper-shadow {
+            box-shadow: 2px 2px 1px rgba(0,0,0,0.05), 0 10px 20px rgba(0,0,0,0.1), 0 6px 6px rgba(0,0,0,0.1);
+        }
+        .washi-tape {
+            background: rgba(251, 191, 36, 0.4);
+            backdrop-filter: blur(1px);
+            box-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+        }
+        .perspective-1000 { perspective: 1000px; }
+        @media print {
+            nav, button, footer, .no-print { display: none !important; }
+            body { background-color: white !important; }
+            main { padding-top: 0 !important; }
+            .page-break { page-break-after: always; }
+            .paper-shadow { box-shadow: none !important; border: 1px solid #eee; }
+        }
     </style>
 </head>
-<body>
+<body class="bg-[#fdfaf6]">
+    <div id="root"></div>
 
-<header>
-    <h1>สมุดภาพครอบครัว</h1>
-    <div class="storage-status" id="storageInfo">ตรวจสอบหน่วยความจำ...</div>
-    <div class="controls">
-        <button class="btn-mini" onclick="exportData()">💾 สำรองข้อมูล</button>
-        <button class="btn-mini" onclick="document.getElementById('importFile').click()">📥 นำเข้าข้อมูล</button>
-        <button class="btn-mini danger" onclick="clearAll()">🗑️ ล้างทั้งหมด</button>
-        <input type="file" id="importFile" style="display:none" onchange="importData(event)">
-    </div>
-</header>
+    <script type="text/babel" data-type="module">
+        const { useState, useEffect, useRef } = React;
+        
+        // Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, doc, addDoc, onSnapshot, updateDoc, deleteDoc, setDoc, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-<div class="album-grid" id="albumGrid">
-    </div>
-
-<button class="btn-add" onclick="openModal()">+</button>
-
-<div id="memberModal" class="modal">
-    <div class="modal-content">
-        <h3 id="modalTitle" style="font-family: 'Mali'; margin: 0 0 15px 0;">บันทึกสมาชิก</h3>
-        <input type="hidden" id="editId">
-        <label style="font-size: 0.75rem; color: #999;">เลือกรูปภาพ (ระบบจะบีบอัดให้อัตโนมัติ)</label>
-        <input type="file" id="mImg" accept="image/*">
-        <input type="text" id="mName" placeholder="ชื่อ-นามสกุล">
-        <input type="text" id="mRel" placeholder="ความสัมพันธ์ (เช่น คุณแม่, พี่ชาย)">
-        <button class="btn-save" onclick="saveMember()">บันทึกข้อมูล</button>
-        <button onclick="closeModal()" style="background:none; border:none; margin-top:10px; color:#ccc; cursor:pointer; font-size: 0.8rem;">ยกเลิก</button>
-    </div>
-</div>
-
-<script>
-    // ใช้ Key ใหม่เพื่อให้เครื่องเริ่มเก็บข้อมูลแบบประหยัดพื้นที่ทันที
-    const KEY = 'photobook_final_v12';
-    let members = JSON.parse(localStorage.getItem(KEY)) || [];
-
-    // --- ระบบย่อรูปภาพเพื่อประหยัดพื้นที่ (บีบอัดขั้นสุด) ---
-    async function processImage(file) {
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (e) => {
-                const img = new Image();
-                img.src = e.target.result;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX_WIDTH = 400; // ขนาดกำลังดีสำหรับการดูบนมือถือ/iPad
-                    const scale = MAX_WIDTH / img.width;
-                    canvas.width = MAX_WIDTH;
-                    canvas.height = img.height * scale;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    resolve(canvas.toDataURL('image/jpeg', 0.6)); // บีบอัดเหลือคุณภาพ 60% (ไฟล์จะเล็กลงมาก)
-                };
-            };
-        });
-    }
-
-    function openModal(id = null) {
-        document.getElementById('memberModal').style.display = 'flex';
-        document.getElementById('mImg').value = '';
-        if (id) {
-            const m = members.find(x => x.id === id);
-            document.getElementById('editId').value = m.id;
-            document.getElementById('mName').value = m.name;
-            document.getElementById('mRel').value = m.relation;
-            document.getElementById('modalTitle').innerText = "แก้ไขข้อมูล";
-        } else {
-            document.getElementById('editId').value = '';
-            document.getElementById('mName').value = '';
-            document.getElementById('mRel').value = '';
-            document.getElementById('modalTitle').innerText = "บันทึกสมาชิกใหม่";
-        }
-    }
-
-    function closeModal() { document.getElementById('memberModal').style.display = 'none'; }
-
-    async function saveMember() {
-        const id = document.getElementById('editId').value || "M" + Date.now();
-        const name = document.getElementById('mName').value;
-        const rel = document.getElementById('mRel').value;
-        const file = document.getElementById('mImg').files[0];
-
-        if (!name) return alert("โปรดกรอกชื่อด้วยครับ");
-
-        let imgData = "https://www.w3schools.com/howto/img_avatar.png";
-        const existing = members.find(x => x.id === id);
-        if (existing) imgData = existing.img;
-
-        if (file) imgData = await processImage(file);
-
-        const person = { id, name, relation: rel, img: imgData };
-        const idx = members.findIndex(x => x.id === id);
-
-        if (idx > -1) members[idx] = person;
-        else members.push(person);
-
-        sync();
-        closeModal();
-    }
-
-    function deleteMember(id) {
-        if (confirm("ลบรูปสมาชิกคนนี้ออกจากอัลบั้ม?")) {
-            members = members.filter(x => x.id !== id);
-            sync();
-        }
-    }
-
-    function sync() {
-        try {
-            localStorage.setItem(KEY, JSON.stringify(members));
-            render();
-            updateStorageInfo();
-        } catch (e) {
-            alert("หน่วยความจำเต็ม! แนะนำให้ลบรูปเก่าออกหรือกด 'ล้างทั้งหมด' เพื่อเริ่มใหม่แบบประหยัดพื้นที่ครับ");
-        }
-    }
-
-    function render() {
-        const grid = document.getElementById('albumGrid');
-        grid.innerHTML = members.map(m => `
-            <div class="polaroid">
-                <img src="${m.img}">
-                <div class="caption">
-                    ${m.name}
-                    <small>${m.relation}</small>
-                </div>
-                <div class="card-actions">
-                    <button class="btn-action" onclick="openModal('${m.id}')">✏️ แก้ไข</button>
-                    <button class="btn-action" onclick="deleteMember('${m.id}')">🗑️ ลบ</button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    function updateStorageInfo() {
-        const used = new Blob([JSON.stringify(members)]).size;
-        const percent = ((used / (5 * 1024 * 1024)) * 100).toFixed(1);
-        document.getElementById('storageInfo').innerText = `ใช้พื้นที่ไป: ${percent}% (บีบอัดรูปจิ๋วทำให้เก็บได้อีกเยอะครับ)`;
-    }
-
-    function clearAll() {
-        if (confirm("⚠️ ต้องการลบข้อมูลทั้งหมดในเครื่องเพื่อเริ่มใหม่ใช่ไหม?")) {
-            members = [];
-            sync();
-        }
-    }
-
-    function exportData() {
-        const blob = new Blob([JSON.stringify(members)], {type: 'application/json'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'family-photobook.json'; a.click();
-    }
-
-    function importData(e) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            members = JSON.parse(event.target.result);
-            sync();
-            alert("นำเข้าข้อมูลสำเร็จ!");
+        // Safe check for environment variables
+        const getFirebaseConfig = () => {
+            try { 
+                return (typeof __firebase_config !== 'undefined') ? JSON.parse(__firebase_config) : null; 
+            } catch (e) { 
+                console.error("Firebase config parse error", e);
+                return null; 
+            }
         };
-        reader.readAsText(e.target.files[0]);
-    }
 
-    // เริ่มต้นแอป
-    render();
-    updateStorageInfo();
-</script>
+        const config = getFirebaseConfig();
+        const app = config ? initializeApp(config) : null;
+        const auth = app ? getAuth(app) : null;
+        const db = app ? getFirestore(app) : null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'photobook-memoir-v2';
+
+        const Icon = ({ name, size = 24, className = "" }) => {
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [name]);
+            return <i data-lucide={name} className={className} style={{ width: size, height: size }}></i>;
+        };
+
+        const App = () => {
+            const [user, setUser] = useState(null);
+            const [books, setBooks] = useState([]);
+            const [activeBook, setActiveBook] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
+            const [showEditor, setShowEditor] = useState(false);
+            const [showCreateModal, setShowCreateModal] = useState(false);
+            const [isShareView, setIsShareView] = useState(false);
+            const [viewOnlyId, setViewOnlyId] = useState(null);
+            const [newBookTitle, setNewBookTitle] = useState("");
+
+            useEffect(() => {
+                if (!auth) {
+                    setError("ระบบเชื่อมต่อฐานข้อมูลขัดข้อง (Firebase config missing)");
+                    setLoading(false);
+                    return;
+                }
+
+                const initAuth = async () => {
+                    try {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    } catch (err) { 
+                        console.error("Auth failed:", err);
+                        setError("ไม่สามารถยืนยันตัวตนได้ กรุณารีเฟรชหน้าจอ");
+                    }
+                };
+
+                initAuth();
+                const unsubscribe = onAuthStateChanged(auth, (u) => {
+                    setUser(u);
+                    if (!u) {
+                        // If auth fails to resolve quickly, allow UI to show something
+                        setTimeout(() => setLoading(false), 3000);
+                    }
+                });
+                return () => unsubscribe();
+            }, []);
+
+            useEffect(() => {
+                const params = new URLSearchParams(window.location.search);
+                const sharedId = params.get('book');
+                if (sharedId) {
+                    setViewOnlyId(sharedId);
+                    setIsShareView(true);
+                }
+            }, []);
+
+            useEffect(() => {
+                if (!user || !db) return;
+                
+                const booksRef = collection(db, 'artifacts', appId, 'public', 'data', 'books');
+                const unsubscribe = onSnapshot(booksRef, (snapshot) => {
+                    const booksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    const filtered = booksData.filter(b => b.ownerId === user.uid || b.id === viewOnlyId);
+                    setBooks(filtered);
+                    
+                    if (viewOnlyId) {
+                        const shared = filtered.find(b => b.id === viewOnlyId);
+                        if (shared) setActiveBook(shared);
+                    }
+                    setLoading(false);
+                }, (error) => { 
+                    console.error("Firestore Error:", error);
+                    setError("ไม่สามารถโหลดข้อมูลได้ในขณะนี้");
+                    setLoading(false); 
+                });
+                
+                return () => unsubscribe();
+            }, [user, viewOnlyId]);
+
+            const createNewBook = async (e) => {
+                e.preventDefault();
+                if (!user || !newBookTitle.trim()) return;
+                try {
+                    const newBook = {
+                        title: newBookTitle, 
+                        createdAt: Date.now(), 
+                        ownerId: user.uid,
+                        coverImage: "https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=1000",
+                        pages: [], 
+                        likes: 0
+                    };
+                    await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'books'), newBook);
+                    setNewBookTitle("");
+                    setShowCreateModal(false);
+                } catch (err) { console.error(err); }
+            };
+
+            const deleteBook = async (e, bookId) => {
+                e.stopPropagation();
+                if (!confirm("ลบสมุดเล่มนี้ถาวรใช่ไหม?")) return;
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'books', bookId));
+                    if (activeBook?.id === bookId) setActiveBook(null);
+                } catch (err) { console.error(err); }
+            };
+
+            const updateBook = async (updatedBook) => {
+                if (isShareView) return;
+                try {
+                    const bookRef = doc(db, 'artifacts', appId, 'public', 'data', 'books', updatedBook.id);
+                    await setDoc(bookRef, updatedBook);
+                } catch (err) { console.error(err); }
+            };
+
+            const handleLike = async (e) => {
+                e.stopPropagation();
+                try {
+                    const bookRef = doc(db, 'artifacts', appId, 'public', 'data', 'books', activeBook.id);
+                    await updateDoc(bookRef, { likes: increment(1) });
+                } catch (err) { console.error(err); }
+            };
+
+            const shareBook = () => {
+                const url = `${window.location.origin}${window.location.pathname}?book=${activeBook.id}`;
+                const dummy = document.createElement("input");
+                document.body.appendChild(dummy);
+                dummy.value = url; dummy.select();
+                document.execCommand("copy");
+                document.body.removeChild(dummy);
+                alert("คัดลอกลิงก์แชร์แล้ว!");
+            };
+
+            if (error) return (
+                <div className="flex flex-col items-center justify-center min-h-screen bg-[#fdfaf6] p-6 text-center">
+                    <div className="bg-red-50 p-8 rounded-3xl border border-red-100 max-w-md">
+                        <Icon name="alert-circle" size={48} className="text-red-400 mx-auto mb-4" />
+                        <h2 className="text-2xl font-serif font-bold text-stone-900 mb-2">เกิดข้อผิดพลาด</h2>
+                        <p className="text-stone-600 mb-6">{error}</p>
+                        <button onClick={() => window.location.reload()} className="bg-stone-900 text-white px-8 py-3 rounded-full font-bold">ลองใหม่อีกครั้ง</button>
+                    </div>
+                </div>
+            );
+
+            if (loading) return (
+                <div className="flex flex-col items-center justify-center min-h-screen bg-[#fdfaf6]">
+                    <div className="w-16 h-16 border-4 border-stone-200 border-t-stone-800 rounded-full animate-spin"></div>
+                    <div className="mt-6 font-serif text-stone-500 tracking-widest uppercase text-sm">กำลังเปิดสมุดบันทึก...</div>
+                </div>
+            );
+
+            if (!activeBook) return (
+                <div className="min-h-screen bg-[#f8f5f0] text-stone-800 p-6 md:p-12">
+                    <header className="max-w-6xl mx-auto mb-12 flex flex-col md:flex-row md:justify-between md:items-end gap-6">
+                        <div>
+                            <h1 className="text-6xl font-serif font-bold text-stone-900">Memoir.</h1>
+                            <p className="text-stone-500 font-serif italic text-lg mt-2 tracking-wide">"เก็บทุกความทรงจำไว้ในหน้ากระดาษดิจิทัล"</p>
+                        </div>
+                        <button 
+                            onClick={() => setShowCreateModal(true)} 
+                            className="bg-stone-900 text-white px-8 py-4 rounded-full hover:bg-stone-800 transition-all shadow-xl flex items-center justify-center gap-2 group"
+                            disabled={!user}
+                        >
+                            <Icon name="plus" size={20} className="group-hover:rotate-90 transition-transform" /> 
+                            <span className="font-bold">{!user ? 'กำลังเชื่อมต่อ...' : 'เริ่มบันทึกใหม่'}</span>
+                        </button>
+                    </header>
+
+                    <main className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+                        {books.map(book => (
+                            <div key={book.id} onClick={() => setActiveBook(book)} className="group cursor-pointer bg-white p-3 rounded-sm shadow-md hover:shadow-2xl transition-all perspective-1000">
+                                <div className="aspect-[3/4] overflow-hidden relative rounded-sm">
+                                    <img src={book.pages && book.pages.length > 0 ? book.pages[0].image : book.coverImage} className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700" />
+                                    <div className="absolute inset-0 bg-black/5" />
+                                    <button onClick={(e) => deleteBook(e, book.id)} className="absolute top-4 right-4 p-2 bg-white/90 rounded-full opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all">
+                                        <Icon name="trash-2" size={16} />
+                                    </button>
+                                </div>
+                                <div className="pt-6 pb-4 px-4 text-center">
+                                    <h3 className="text-2xl font-serif font-bold text-stone-800 truncate">{book.title}</h3>
+                                    <p className="text-stone-400 text-xs uppercase mt-2 tracking-widest">{book.pages?.length || 0} Pages • {book.likes || 0} Hearts</p>
+                                </div>
+                            </div>
+                        ))}
+                        {books.length === 0 && (
+                            <div className="col-span-full py-24 text-center border-2 border-dashed border-stone-200 rounded-3xl bg-white/50">
+                                <Icon name="book-open" size={48} className="mx-auto text-stone-300 mb-4" />
+                                <p className="text-stone-400 font-serif italic text-xl">ยังไม่มีสมุดบันทึกของคุณ เริ่มต้นสร้างเล่มแรกได้เลย</p>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Create Book Modal */}
+                    {showCreateModal && (
+                        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                            <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-md" onClick={() => setShowCreateModal(false)} />
+                            <form onSubmit={createNewBook} className="relative bg-white w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl space-y-8 animate-in zoom-in-95 duration-300">
+                                <div className="text-center">
+                                    <h3 className="text-3xl font-serif font-bold text-stone-900">สร้างสมุดเล่มใหม่</h3>
+                                    <p className="text-stone-400 text-sm mt-2">ตั้งชื่อให้กับความทรงจำชุดนี้ของคุณ</p>
+                                </div>
+                                <input 
+                                    autoFocus
+                                    value={newBookTitle}
+                                    onChange={(e) => setNewBookTitle(e.target.value)}
+                                    placeholder="เช่น ทริปญี่ปุ่น 2024, วันเกิดลูกสาว..." 
+                                    className="w-full p-5 rounded-2xl bg-stone-50 border border-stone-100 outline-none focus:ring-4 focus:ring-amber-100 transition-all text-lg"
+                                    required
+                                />
+                                <div className="flex gap-3">
+                                    <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 py-4 bg-stone-100 text-stone-600 rounded-2xl font-bold hover:bg-stone-200 transition-all">ยกเลิก</button>
+                                    <button type="submit" className="flex-[2] py-4 bg-stone-900 text-white rounded-2xl font-bold hover:bg-stone-800 shadow-lg transition-all">ตกลง</button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+                </div>
+            );
+
+            return (
+                <div className="min-h-screen bg-[#fdfaf6]">
+                    <nav className="fixed top-0 inset-x-0 z-[100] bg-white/70 backdrop-blur-xl border-b border-stone-100 px-6 py-4 no-print flex justify-between items-center">
+                        <div className="flex items-center gap-4">
+                            <button onClick={() => {setActiveBook(null); setIsShareView(false); window.history.replaceState({}, '', window.location.pathname);}} className="p-2 hover:bg-stone-100 rounded-full transition-colors text-stone-600">
+                                <Icon name="arrow-left" />
+                            </button>
+                            <h2 className="text-2xl font-serif font-bold text-stone-900">{activeBook.title}</h2>
+                        </div>
+                        <div className="flex gap-2">
+                            <button onClick={() => window.print()} className="p-3 border border-stone-200 rounded-full hover:bg-stone-50 text-stone-600" title="พิมพ์/PDF"><Icon name="printer" size={20} /></button>
+                            <button onClick={handleLike} className="p-3 border border-stone-200 rounded-full hover:bg-red-50 hover:text-red-500 transition-all"><Icon name="heart" size={20} className={activeBook.likes > 0 ? "fill-current text-red-500" : ""} /></button>
+                            {!isShareView && <button onClick={shareBook} className="p-3 border border-stone-200 rounded-full hover:bg-stone-50 text-stone-600"><Icon name="share-2" size={20} /></button>}
+                            {!isShareView && (
+                                <button onClick={() => setShowEditor(true)} className="bg-stone-900 text-white px-6 py-2 rounded-full flex items-center gap-2 hover:bg-stone-800 shadow-lg transition-all">
+                                    <Icon name="plus" size={18} /> <span className="font-bold">เพิ่มรูป</span>
+                                </button>
+                            )}
+                        </div>
+                    </nav>
+
+                    <main className="max-w-2xl mx-auto pt-32 pb-40 px-6 space-y-24">
+                        {activeBook.pages?.map((page, index) => (
+                            <div key={index} className="relative group page-break animate-in fade-in slide-in-from-bottom-10 duration-700">
+                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-8 washi-tape -rotate-2 z-20 opacity-80" />
+                                <div className="bg-white p-6 pb-12 paper-shadow rounded-sm transform rotate-1 group-even:-rotate-1 relative">
+                                    <div className="aspect-[4/5] bg-stone-50 overflow-hidden mb-8 border-8 border-stone-50 shadow-inner rounded-sm">
+                                        <img src={page.image} className="w-full h-full object-cover" />
+                                    </div>
+                                    {page.text && <p className="font-serif text-2xl text-stone-700 text-center italic leading-relaxed">"{page.text}"</p>}
+                                </div>
+                                {!isShareView && (
+                                    <button onClick={() => {const np = [...activeBook.pages]; np.splice(index, 1); updateBook({...activeBook, pages: np});}} className="absolute -top-4 -right-4 p-3 bg-white text-red-500 rounded-full shadow-lg opacity-0 group-hover:opacity-100 no-print hover:bg-red-50 transition-all">
+                                        <Icon name="trash-2" size={18} />
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+                        {(!activeBook.pages || activeBook.pages.length === 0) && (
+                            <div className="text-center py-40 bg-white/50 border-2 border-dashed border-stone-200 rounded-[3rem] no-print">
+                                <Icon name="camera" size={48} className="mx-auto text-stone-200 mb-6" />
+                                <p className="text-stone-400 font-serif italic text-xl">สมุดเล่มนี้ยังไม่มีรูปภาพ กดปุ่มเพิ่มรูปด้านบนได้เลย</p>
+                            </div>
+                        )}
+                    </main>
+
+                    {showEditor && (
+                        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                            <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-md" onClick={() => setShowEditor(false)} />
+                            <form onSubmit={async (e) => {
+                                e.preventDefault();
+                                const fd = new FormData(e.target);
+                                const np = [...(activeBook.pages || []), { image: fd.get('imageUrl'), text: fd.get('text') }];
+                                await updateBook({...activeBook, pages: np});
+                                setShowEditor(false);
+                            }} className="relative bg-white w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl space-y-6 animate-in zoom-in-95 duration-300">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="text-3xl font-serif font-bold text-stone-900">บันทึกหน้าใหม่</h3>
+                                    <button type="button" onClick={() => setShowEditor(false)} className="text-stone-400 hover:text-stone-600"><Icon name="x" size={24} /></button>
+                                </div>
+                                <input name="imageUrl" type="url" placeholder="Link รูปภาพ (URL)" required className="w-full p-4 rounded-2xl bg-stone-50 border outline-none focus:ring-4 focus:ring-amber-100 transition-all" />
+                                <textarea name="text" placeholder="บรรยายความรู้สึก..." rows="3" className="w-full p-4 rounded-2xl bg-stone-50 border outline-none focus:ring-4 focus:ring-amber-100 resize-none transition-all" />
+                                <button type="submit" className="w-full py-5 bg-stone-900 text-white rounded-2xl font-bold text-lg hover:bg-stone-800 shadow-lg transition-all">บันทึกความทรงจำ</button>
+                            </form>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
